@@ -8,12 +8,13 @@
   <link rel="stylesheet" href="admin.css">
 </head>
 <body class="admin-page">
+  <a class="admin-back-link" href="../index.html">← Voltar à loja</a>
   <main class="admin-login">
     <img src="../assets/IMG-20260820-WA0128-removebg-preview.png" alt="Sollazer Piscinas" class="admin-logo">
     <form class="admin-panel" id="loginForm">
       <p class="admin-kicker">Área restrita</p>
       <h1>Acesso do funcionário</h1>
-      <label>E-mail<input type="email" id="email" required autocomplete="username"></label>
+      <label>E-mail<input type="email" id="email" value="alcei@sollazerpiscinas.com.br" required autocomplete="username"></label>
       <label>Senha<input type="password" id="senha" required autocomplete="current-password"></label>
       <button class="admin-button" type="submit">Entrar</button>
       <p class="admin-message" id="loginMessage" role="alert"></p>

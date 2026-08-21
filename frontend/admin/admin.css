@@ -1,5 +1,6 @@
 :root { --admin-blue: #12688a; --admin-light: #f5f9fb; --admin-border: #dbe7ec; }
 .admin-page { min-height: 100vh; background: linear-gradient(135deg, #f8fcfd, #e8f4f8); color: #163a4b; }
+.admin-back-link { position: fixed; top: 18px; left: 20px; z-index: 2; color: var(--admin-blue); font-weight: 800; font-size: .9rem; }
 .admin-login { width: min(440px, calc(100% - 32px)); margin: 0 auto; padding: 52px 0; }
 .admin-logo { width: 240px; max-width: 80%; height: auto; margin: 0 auto 28px; }
 .admin-panel, .admin-card { background: #fff; border: 1px solid var(--admin-border); border-radius: 10px; box-shadow: 0 10px 30px rgba(22, 58, 75, .08); padding: 24px; }
