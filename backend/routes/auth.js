@@ -15,7 +15,7 @@ const { body, validationResult } = require('express-validator');
 router.post(
   '/login',
   [
-    body('email').trim().isEmail().withMessage('E-mail inválido.'),
+    body('usuario').trim().notEmpty().isLength({ max: 80 }).withMessage('Usuário é obrigatório.'),
     // VALIDAÇÃO DE SENHA: aqui validamos apenas o formato da requisição.
     // A força da senha (mínimo de caracteres, letras/números/símbolos)
     // deve ser garantida no momento do CADASTRO do admin, não no login.
@@ -27,13 +27,13 @@ router.post(
       return res.status(400).json({ erros: errors.array() });
     }
 
-    const { email, senha } = req.body;
+    const { usuario, senha } = req.body;
 
     try {
       // Query preparada — protege contra SQL Injection no campo e-mail.
       const [rows] = await db.execute(
-        'SELECT id, nome, email, senha_hash FROM administradores WHERE email = ?',
-        [email]
+        'SELECT id, nome, usuario, email, senha_hash FROM administradores WHERE usuario = ?',
+        [usuario]
       );
 
       if (rows.length === 0) {
@@ -51,12 +51,12 @@ router.post(
 
       // Gera o token JWT que o painel deve enviar em "Authorization: Bearer <token>".
       const token = jwt.sign(
-        { id: admin.id, email: admin.email, nome: admin.nome },
+        { id: admin.id, usuario: admin.usuario, nome: admin.nome },
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_EXPIRES_IN || '8h' }
       );
 
-      res.json({ token, admin: { id: admin.id, nome: admin.nome, email: admin.email } });
+      res.json({ token, admin: { id: admin.id, nome: admin.nome, usuario: admin.usuario } });
     } catch (err) {
       console.error(err);
       res.status(500).json({ erro: 'Erro ao autenticar.' });
@@ -69,7 +69,7 @@ router.post(
 // (não exposta como rota pública por padrão — ative com cautela,
 // idealmente protegida por outra camada de autenticação/convite).
 // ---------------------------------------------------------
-async function criarAdminExemplo(nome, email, senhaPura) {
+async function criarAdminExemplo(nome, usuario, email, senhaPura) {
   // VALIDAÇÃO DE SENHA FORTE deve acontecer aqui, por exemplo:
   // - mínimo 8 caracteres
   // - ao menos 1 letra maiúscula, 1 número e 1 símbolo
@@ -78,8 +78,8 @@ async function criarAdminExemplo(nome, email, senhaPura) {
   const senhaHash = await bcrypt.hash(senhaPura, SALT_ROUNDS);
 
   await db.execute(
-    'INSERT INTO administradores (nome, email, senha_hash) VALUES (?, ?, ?)',
-    [nome, email, senhaHash]
+    'INSERT INTO administradores (nome, usuario, email, senha_hash) VALUES (?, ?, ?, ?)',
+    [nome, usuario, email, senhaHash]
   );
 }
 

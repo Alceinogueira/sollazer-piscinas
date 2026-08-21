@@ -75,11 +75,12 @@ Depois de criar a tabela nova, rode novamente o trecho de `backend/database.sql`
 em seu MySQL. O login exige um administrador cadastrado com senha armazenada em
 hash bcrypt; a função auxiliar está em `backend/routes/auth.js`.
 
-Para criar o acesso do funcionário Alcei, com o banco configurado, execute dentro
+Para criar o acesso do funcionário Alcei, com o banco configurado e a migração
+`backend/migrations/002_add_usuario_administrador.sql` executada, execute dentro
 de `backend`:
 
 ```bash
-npm run create-admin -- "Alcei" "alcei@sollazerpiscinas.com.br" "7716"
+npm run create-admin -- "Alcei" "Alcei" "7716"
 ```
 
 O comando cria ou atualiza o usuário usando hash bcrypt. A senha não é salva no

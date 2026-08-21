@@ -2,10 +2,10 @@ require('dotenv').config();
 const bcrypt = require('bcrypt');
 const db = require('../config/db');
 
-const [nome, email, senha] = process.argv.slice(2);
+const [nome, usuario, senha] = process.argv.slice(2);
 
-if (!nome || !email || !senha) {
-  console.error('Uso: node scripts/create-admin.js "Nome" "email" "senha"');
+if (!nome || !usuario || !senha) {
+  console.error('Uso: node scripts/create-admin.js "Nome" "usuario" "senha"');
   process.exit(1);
 }
 
@@ -17,12 +17,12 @@ if (senha.length < 4) {
 async function main() {
   const senhaHash = await bcrypt.hash(senha, 12);
   await db.execute(
-    `INSERT INTO administradores (nome, email, senha_hash)
-     VALUES (?, ?, ?)
-     ON DUPLICATE KEY UPDATE nome = VALUES(nome), senha_hash = VALUES(senha_hash)`,
-    [nome, email, senhaHash]
+    `INSERT INTO administradores (nome, usuario, email, senha_hash)
+     VALUES (?, ?, ?, ?)
+     ON DUPLICATE KEY UPDATE nome = VALUES(nome), email = VALUES(email), senha_hash = VALUES(senha_hash)`,
+    [nome, usuario, `${usuario.toLowerCase()}@sollazerpiscinas.com.br`, senhaHash]
   );
-  console.log(`Acesso criado/atualizado para ${nome} (${email}).`);
+  console.log(`Acesso criado/atualizado para ${nome} (${usuario}).`);
   await db.end();
 }
 

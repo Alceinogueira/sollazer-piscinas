@@ -20,6 +20,7 @@ USE sollazer_piscinas;
 CREATE TABLE IF NOT EXISTS administradores (
   id            INT AUTO_INCREMENT PRIMARY KEY,
   nome          VARCHAR(120)  NOT NULL,
+  usuario       VARCHAR(80)   NOT NULL UNIQUE,
   email         VARCHAR(150)  NOT NULL UNIQUE,
   senha_hash    VARCHAR(255)  NOT NULL, -- gerado com bcrypt (ver middleware/auth.js)
   criado_em     TIMESTAMP     DEFAULT CURRENT_TIMESTAMP
