@@ -173,8 +173,10 @@ body.modal-is-open { overflow: hidden; }
   border-radius: var(--radius);
   overflow: hidden;
   min-height: clamp(320px, 58vw, 680px);
+  aspect-ratio: 16 / 9;
   background: #edf2f3;
 }
+.hero.is-loading { visibility: hidden; }
 .hero__slides,
 .hero__slide {
   position: absolute;

@@ -393,6 +393,11 @@ const hero = document.getElementById('hero');
 function initHeroCarousel() {
   const heroSlides = [...document.querySelectorAll('.hero__slide')];
   const heroDots = [...document.querySelectorAll('.hero__dot')];
+  hero.classList.remove('is-loading');
+  if (heroSlides.length < 2) {
+    document.getElementById('heroPrev').hidden = true;
+    document.getElementById('heroNext').hidden = true;
+  }
   let activeHeroSlide = 0;
   let heroTimer;
 
@@ -420,9 +425,10 @@ async function loadOffers() {
     const response = await fetch(`${API_BASE_URL}/ofertas`);
     if (!response.ok) throw new Error('Falha ao buscar ofertas');
     const ofertas = await response.json();
-    if (ofertas.length === 0) return initHeroCarousel();
+    if (ofertas.length === 0) throw new Error('Nenhuma oferta cadastrada');
 
-    document.getElementById('heroSlides').innerHTML = ofertas.map((oferta, index) => `
+    const heroSlides = document.getElementById('heroSlides');
+    heroSlides.innerHTML = ofertas.map((oferta, index) => `
       <article class="hero__slide${index === 0 ? ' is-active' : ''}" data-slide="${index}">
         <img src="${oferta.imagem}" alt="${oferta.titulo || 'Oferta Sollazer Piscinas'}">
       </article>
@@ -430,8 +436,23 @@ async function loadOffers() {
     document.getElementById('heroDots').innerHTML = ofertas.map((_, index) => `
       <button class="hero__dot${index === 0 ? ' is-active' : ''}" type="button" data-slide-to="${index}" aria-label="Oferta ${index + 1}"></button>
     `).join('');
+
+    const firstImage = heroSlides.querySelector('img');
+    if (firstImage.complete) {
+      initHeroCarousel();
+    } else {
+      firstImage.addEventListener('load', initHeroCarousel, { once: true });
+      firstImage.addEventListener('error', initHeroCarousel, { once: true });
+    }
+    return;
   } catch (err) {
     console.warn('Ofertas da API indisponíveis, usando carrossel padrão:', err.message);
+    document.getElementById('heroSlides').innerHTML = `
+      <article class="hero__slide is-active" data-slide="0">
+        <img src="assets/angelo-pantazis-h0AnGGgseio-unsplash.jpg" alt="Sollazer Piscinas">
+      </article>
+    `;
+    document.getElementById('heroDots').innerHTML = '';
   }
   initHeroCarousel();
 }
