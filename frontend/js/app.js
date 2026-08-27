@@ -256,22 +256,17 @@ function getMockProducts() {
 }
 
 // ---------------------------------------------------------
-// AÇÕES DO CARRINHO (checkout / orçamento)
-// Definidas como funções nomeadas para poderem ser reutilizadas
-// tanto pelos botões da sidebar quanto pela barra fixa do mobile.
+// AÇÃO DO CARRINHO (orçamento)
 // ---------------------------------------------------------
-function handleCheckout() {
-  const cart = getCart();
-  if (cart.length === 0) return alert('Seu carrinho está vazio.');
-  // TODO: integrar com gateway de pagamento (ex: Mercado Pago, Stripe, Pagar.me)
-  alert('Redirecionando para o checkout...');
-}
-
 function buildQuoteMessage(cart) {
-  const items = cart.map(item => {
+  const items = cart.map((item, index) => {
     const subtotal = Number(item.preco || 0) * item.quantity;
-    return `- ${item.nome} | Quantidade: ${item.quantity} | ${formatBRL(subtotal)}`;
-  }).join('\n');
+    return [
+      `${index + 1}. ${item.nome}`,
+      `Quantidade: ${item.quantity}`,
+      `Subtotal: ${formatBRL(subtotal)}`
+    ].join('\n');
+  }).join('\n\n');
   const total = cart.reduce((sum, item) => sum + Number(item.preco || 0) * item.quantity, 0);
 
   return [
@@ -310,11 +305,9 @@ async function handleQuoteRequest() {
   }
 }
 
-document.getElementById('checkoutBtn').addEventListener('click', handleCheckout);
 document.getElementById('quoteBtn').addEventListener('click', handleQuoteRequest);
 
-// Botões da barra fixa exibida apenas no mobile (mesma lógica acima)
-document.getElementById('mobileCheckoutBtn').addEventListener('click', handleCheckout);
+// Botão da barra fixa exibida apenas no mobile
 document.getElementById('mobileQuoteBtn').addEventListener('click', handleQuoteRequest);
 
 // ---------------------------------------------------------
