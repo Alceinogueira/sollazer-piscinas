@@ -267,9 +267,31 @@ function handleCheckout() {
   alert('Redirecionando para o checkout...');
 }
 
+function buildQuoteMessage(cart) {
+  const items = cart.map(item => {
+    const subtotal = Number(item.preco || 0) * item.quantity;
+    return `- ${item.nome} | Quantidade: ${item.quantity} | ${formatBRL(subtotal)}`;
+  }).join('\n');
+  const total = cart.reduce((sum, item) => sum + Number(item.preco || 0) * item.quantity, 0);
+
+  return [
+    'Olá! Gostaria de solicitar um orçamento na Sollazer Piscinas.',
+    '',
+    'Itens selecionados:',
+    items,
+    '',
+    `Total estimado: ${formatBRL(total)}`,
+    '',
+    'Aguardo o retorno. Obrigado!'
+  ].join('\n');
+}
+
 async function handleQuoteRequest() {
   const cart = getCart();
   if (cart.length === 0) return alert('Adicione itens para solicitar um orçamento.');
+
+  const whatsappUrl = `https://wa.me/5573999809030?text=${encodeURIComponent(buildQuoteMessage(cart))}`;
+  window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
 
   try {
     // Envia o carrinho para a rota pública de orçamentos do backend
