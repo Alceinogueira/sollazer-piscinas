@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sollazer Piscinas | Loja Oficial</title>
+  <meta name="description" content="Sollazer Piscinas - Produtos de limpeza, manutenção e equipamentos para piscinas.">
+  <link rel="stylesheet" href="css/style.css?v=20260822-8">
+</head>
+<body>
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="header">
+    <div class="container header__inner">
+
+      <a href="index.html" class="logo">
+        <img src="assets/IMG-20260820-WA0128-removebg-preview.png" alt="Sollazer Piscinas" class="logo__image" decoding="async" fetchpriority="high">
+      </a>
+
+      <!-- Navegação Desktop -->
+      <nav class="nav" id="mainNav">
+        <ul class="nav__list">
+          <li class="nav__item nav__item--dropdown nav__item--active">
+            <a href="#produtos" class="nav__link">Produtos <span class="nav__arrow">▾</span></a>
+            <ul class="nav__submenu">
+              <li><a href="#produtos" data-category="Todos">Todos os produtos</a></li>
+              <li><a href="#produtos" data-category="Cloros">Cloros</a></li>
+              <li><a href="#produtos" data-category="Bombas e Filtros">Bombas e Filtros</a></li>
+              <li><a href="#produtos" data-category="Produtos Químicos">Produtos Químicos</a></li>
+              <li><a href="#produtos" data-category="Diversos">Diversos</a></li>
+            </ul>
+          </li>
+          <li class="nav__item"><a href="#sobre" class="nav__link">Sobre Nós</a></li>
+          <li class="nav__item"><a href="#contato" class="nav__link">Contato</a></li>
+        </ul>
+      </nav>
+
+      <!-- Ações do header -->
+      <div class="header__actions">
+        <a href="admin/login.html" class="btn btn--outline">Login</a>
+        <!-- Ícone de carrinho (abre a sidebar / drawer em qualquer resolução) -->
+        <button class="cart-toggle" id="cartToggle" aria-label="Abrir carrinho">
+          🛒 <span class="cart-toggle__count" id="cartCount">0</span>
+        </button>
+        <!-- Menu hambúrguer (mobile) -->
+        <button class="hamburger" id="hamburgerBtn" aria-label="Abrir menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Fundo escurecido atrás do carrinho quando aberto (mobile/tablet) -->
+  <div class="cart-backdrop" id="cartBackdrop"></div>
+
+  <div class="product-modal" id="productModal" role="dialog" aria-modal="true" aria-labelledby="productModalTitle" hidden>
+    <div class="product-modal__content">
+      <button class="product-modal__close" id="productModalClose" type="button" aria-label="Fechar detalhes">×</button>
+      <img class="product-modal__image" id="productModalImage" alt="">
+      <button class="product-modal__control product-modal__control--prev" id="productModalPrev" type="button" aria-label="Imagem anterior">‹</button>
+      <button class="product-modal__control product-modal__control--next" id="productModalNext" type="button" aria-label="Próxima imagem">›</button>
+      <div class="product-modal__dots" id="productModalDots" aria-label="Imagens do produto"></div>
+      <div class="product-modal__body">
+        <span class="product-modal__category" id="productModalCategory"></span>
+        <h2 id="productModalTitle"></h2>
+        <p id="productModalDescription"></p>
+        <strong id="productModalPrice"></strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- ===================== LINHA SUPERIOR: HERO + CARRINHO ===================== -->
+    <div class="top-row">
+
+      <section class="hero" id="hero">
+        <div class="hero__slides" id="heroSlides">
+          <article class="hero__slide is-active" data-slide="0">
+            <div class="hero__overlay"></div>
+            <div class="hero__content">
+              <span class="hero__eyebrow">Oferta da semana</span>
+              <h1>Os melhores produtos<br>para sua piscina</h1>
+              <p>Equipamentos selecionados para deixar sua piscina sempre pronta.</p>
+              <a href="#produtos" class="btn btn--primary">Ver Catálogo</a>
+            </div>
+          </article>
+          <article class="hero__slide" data-slide="1">
+            <div class="hero__overlay"></div>
+            <div class="hero__content">
+              <span class="hero__eyebrow">Mais eficiência</span>
+              <h1>Filtros e bombas<br>para alto desempenho</h1>
+              <p>Mais limpeza, economia e tranquilidade para cuidar da sua piscina.</p>
+              <a href="#produtos" class="btn btn--primary">Ver Produtos</a>
+            </div>
+          </article>
+          <article class="hero__slide" data-slide="2">
+            <div class="hero__overlay"></div>
+            <div class="hero__content">
+              <span class="hero__eyebrow">Soluções sob medida</span>
+              <h1>Seu verão começa<br>com a Sollazer</h1>
+              <p>Conte com a nossa equipe para escolher a solução ideal.</p>
+              <a href="#contato" class="btn btn--primary">Fale Conosco</a>
+            </div>
+          </article>
+        </div>
+        <button class="hero__control hero__control--prev" id="heroPrev" type="button" aria-label="Oferta anterior">&#8249;</button>
+        <button class="hero__control hero__control--next" id="heroNext" type="button" aria-label="Próxima oferta">&#8250;</button>
+        <div class="hero__dots" id="heroDots" aria-label="Selecionar oferta">
+          <button class="hero__dot is-active" type="button" data-slide-to="0" aria-label="Oferta 1"></button>
+          <button class="hero__dot" type="button" data-slide-to="1" aria-label="Oferta 2"></button>
+          <button class="hero__dot" type="button" data-slide-to="2" aria-label="Oferta 3"></button>
+        </div>
+      </section>
+
+      <!-- ===================== CARRINHO LATERAL (SIDEBAR) ===================== -->
+      <aside class="cart-sidebar" id="cartSidebar">
+        <div class="cart-sidebar__header">
+          <h3>Seu Carrinho / Orçamento</h3>
+          <button class="cart-sidebar__close" id="cartCloseBtn" aria-label="Fechar carrinho">×</button>
+        </div>
+
+        <ul class="cart-items" id="cartItems">
+          <!-- Itens renderizados dinamicamente via app.js a partir do LocalStorage -->
+          <li class="cart-items__empty" id="cartEmptyMsg">Seu carrinho está vazio.</li>
+        </ul>
+
+        <div class="cart-summary">
+          <div class="cart-summary__row">
+            <span>Subtotal:</span>
+            <span id="cartSubtotal">R$ 0,00</span>
+          </div>
+          <div class="cart-summary__row cart-summary__row--total">
+            <span>Total:</span>
+            <span id="cartTotal">R$ 0,00</span>
+          </div>
+        </div>
+
+        <div class="cart-actions">
+          <button class="btn btn--primary btn--block" id="checkoutBtn">[FINALIZAR COMPRA]</button>
+          <button class="btn btn--secondary btn--block" id="quoteBtn">[SOLICITAR ORÇAMENTO]</button>
+        </div>
+      </aside>
+
+    </div>
+
+    <!-- ===================== CONTEÚDO PRINCIPAL ===================== -->
+    <main class="main-content">
+
+      <!-- Grid de Produtos -->
+      <section class="products" id="produtos">
+        <h2 class="section-title">Nossos Produtos</h2>
+        <div class="products-filter" id="productsFilter" role="toolbar" aria-label="Categorias de produtos">
+          <button type="button" class="products-filter__button is-active" data-category="Todos">Todos</button>
+          <button type="button" class="products-filter__button" data-category="Cloros">Cloros</button>
+          <button type="button" class="products-filter__button" data-category="Bombas e Filtros">Bombas e Filtros</button>
+          <button type="button" class="products-filter__button" data-category="Produtos Químicos">Produtos Químicos</button>
+          <button type="button" class="products-filter__button" data-category="Diversos">Diversos</button>
+        </div>
+        <div class="products__grid" id="productsGrid">
+          <!-- Os cards de produto são renderizados dinamicamente via app.js (fetch na API) -->
+          <p class="products__loading" id="productsLoading">Carregando produtos...</p>
+        </div>
+      </section>
+
+      <!-- Sobre Nós -->
+      <section class="about" id="sobre">
+        <h2 class="section-title">Sobre Nós</h2>
+        <p>A Sollazer Piscinas é uma loja revendedora especializada em produtos de limpeza, manutenção
+          e equipamentos para piscinas. Trabalhamos com as melhores marcas do mercado, como Genco e Jacuzzi,
+          para garantir qualidade e durabilidade em cada compra.</p>
+      </section>
+
+      <!-- Contato -->
+      <section class="contact" id="contato">
+        <h2 class="section-title">Contato</h2>
+        <p>📞 (73) 99980-9030 &nbsp;|&nbsp; ✉️ sollazerpiscinas1@gmail.com</p>
+      </section>
+    </main>
+
+  </div>
+
+  <!-- ===================== BARRA FIXA DE AÇÕES (somente mobile) ===================== -->
+  <div class="mobile-action-bar" id="mobileActionBar">
+    <button class="mobile-action-bar__btn" id="mobileCheckoutBtn">[FINALIZAR COMPRA]</button>
+    <button class="mobile-action-bar__btn" id="mobileQuoteBtn">[SOLICITAR ORÇAMENTO]</button>
+  </div>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; <span id="year"></span> Sollazer Piscinas — Todos os direitos reservados.</p>
+    </div>
+  </footer>
+
+  <script src="js/config.js?v=20260822-8"></script>
+  <script src="js/app.js?v=20260822-8"></script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+    volumes:
+      - uploads:/usr/share/nginx/html/assets/uploads
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: 3000
+      DB_HOST: db
+      DB_USER: sollazer
+      DB_PASSWORD: sollazer_local
+      DB_NAME: sollazer_piscinas
+      DB_PORT: 3306
+      JWT_SECRET: sollazer_local_jwt_secret_change_me
+      JWT_EXPIRES_IN: 8h
+    expose:
+      - "3000"
+    volumes:
+      - uploads:/app/../frontend/assets/uploads
+    restart: unless-stopped
+
+  db:
+    image: mysql:8.4
+    ports:
+      - "127.0.0.1:3306:3306"
+    environment:
+      MYSQL_DATABASE: sollazer_piscinas
+      MYSQL_USER: sollazer
+      MYSQL_PASSWORD: sollazer_local
+      MYSQL_ROOT_PASSWORD: root_local_change_me
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/database.sql:/docker-entrypoint-initdb.d/01-database.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+  uploads:

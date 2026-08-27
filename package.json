@@ -1,0 +1,10 @@
+{
+  "name": "sollazer-piscinas",
+  "private": true,
+  "scripts": {
+    "start": "npm --prefix backend start",
+    "dev": "npm --prefix backend run dev",
+    "create-admin": "npm --prefix backend run create-admin",
+    "create-funcionario": "npm --prefix backend run create-funcionario"
+  }
+}
