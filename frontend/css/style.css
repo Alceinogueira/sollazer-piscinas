@@ -172,8 +172,7 @@ body.modal-is-open { overflow: hidden; }
   position: relative;
   border-radius: var(--radius);
   overflow: hidden;
-  min-height: clamp(320px, 58vw, 680px);
-  aspect-ratio: 16 / 9;
+  height: clamp(180px, 56.25vw, 675px);
   background: #edf2f3;
 }
 .hero.is-loading { visibility: hidden; }
@@ -394,5 +393,4 @@ body.modal-is-open { overflow: hidden; }
   .products__grid { grid-template-columns: repeat(4, 1fr); }
   .product-card__img { height: 148px; }
 
-  .hero { min-height: clamp(420px, 54vw, 680px); }
 }
