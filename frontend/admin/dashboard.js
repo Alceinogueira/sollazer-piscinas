@@ -100,7 +100,7 @@ document.getElementById('offerForm').onsubmit = async event => {
     const imageFile = document.getElementById('offerImageFile').files[0];
     if (imageFile) {
       const formData = new FormData();
-      formData.append('imagem', imageFile);
+      formData.append('imagens', imageFile);
       const uploadResponse = await fetch(`${API_BASE_URL}/admin/uploads`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData });
       const uploadData = await uploadResponse.json().catch(() => ({}));
       if (!uploadResponse.ok) throw new Error(uploadData.erro || 'Não foi possível enviar a imagem.');

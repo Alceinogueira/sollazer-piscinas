@@ -7,7 +7,15 @@ const ofertaFields = [
   body('titulo').trim().notEmpty().isLength({ max: 180 }),
   body('subtitulo').optional({ values: 'null' }).trim().isLength({ max: 255 }),
   body('descricao').optional({ values: 'null' }).trim(),
-  body('imagem_url').trim().isURL({ require_protocol: true, require_tld: false }),
+  body('imagem_url').trim().notEmpty().custom(value => {
+    if (value.startsWith('/assets/uploads/')) return true;
+    try {
+      const parsedUrl = new URL(value);
+      return parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
+    } catch {
+      return false;
+    }
+  }),
   body('link').optional({ values: 'null' }).trim().isLength({ max: 255 }),
   body('ordem').optional().isInt({ min: 0 }),
   body('ativo').optional().isBoolean()
