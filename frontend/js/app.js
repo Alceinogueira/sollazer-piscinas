@@ -423,15 +423,8 @@ async function loadOffers() {
     if (ofertas.length === 0) return initHeroCarousel();
 
     document.getElementById('heroSlides').innerHTML = ofertas.map((oferta, index) => `
-      <article class="hero__slide${index === 0 ? ' is-active' : ''}" data-slide="${index}"
-        style="background-image: url('${oferta.imagem}')">
-        <div class="hero__overlay"></div>
-        <div class="hero__content">
-          <span class="hero__eyebrow">Oferta especial</span>
-          <h1>${oferta.titulo}</h1>
-          <p>${oferta.subtitulo || oferta.descricao || ''}</p>
-          <a href="${oferta.link || '#produtos'}" class="btn btn--primary">Ver Oferta</a>
-        </div>
+      <article class="hero__slide${index === 0 ? ' is-active' : ''}" data-slide="${index}">
+        <img src="${oferta.imagem}" alt="${oferta.titulo || 'Oferta Sollazer Piscinas'}">
       </article>
     `).join('');
     document.getElementById('heroDots').innerHTML = ofertas.map((_, index) => `
