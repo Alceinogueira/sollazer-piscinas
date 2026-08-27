@@ -1,13 +1,49 @@
 services:
+  traefik:
+    image: traefik:v3.7
+    command:
+      - "--api.dashboard=true"
+      - "--api.insecure=false"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=sollazer_proxy"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.mysql.address=:3306"
+      - "--certificatesresolvers.letsencrypt.acme.email=alceinogueira1@gmail.com"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "3306:3306"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - letsencrypt:/letsencrypt
+    networks:
+      - proxy
+      - internal
+    restart: unless-stopped
+
   frontend:
     build:
       context: ./frontend
     depends_on:
       - backend
-    ports:
-      - "8080:80"
     volumes:
       - uploads:/usr/share/nginx/html/assets/uploads
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sollazer.rule=Host(`sollazer.alcei.online`)"
+      - "traefik.http.routers.sollazer.entrypoints=websecure"
+      - "traefik.http.routers.sollazer.tls.certresolver=letsencrypt"
+      - "traefik.http.services.sollazer.loadbalancer.server.port=80"
+    networks:
+      - proxy
+      - internal
     restart: unless-stopped
 
   backend:
@@ -29,12 +65,19 @@ services:
       - "3000"
     volumes:
       - uploads:/app/../frontend/assets/uploads
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sollazer-api.rule=Host(`sollazer-api.alcei.online`)"
+      - "traefik.http.routers.sollazer-api.entrypoints=websecure"
+      - "traefik.http.routers.sollazer-api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.sollazer-api.loadbalancer.server.port=3000"
+    networks:
+      - proxy
+      - internal
     restart: unless-stopped
 
   db:
     image: mysql:8.4
-    ports:
-      - "127.0.0.1:3306:3306"
     environment:
       MYSQL_DATABASE: sollazer_piscinas
       MYSQL_USER: sollazer
@@ -48,8 +91,23 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
+    labels:
+      - "traefik.enable=true"
+      - "traefik.tcp.routers.sollazer-db.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.sollazer-db.entrypoints=mysql"
+      - "traefik.tcp.services.sollazer-db.loadbalancer.server.port=3306"
+    networks:
+      - proxy
+      - internal
     restart: unless-stopped
 
 volumes:
   mysql_data:
   uploads:
+  letsencrypt:
+
+networks:
+  proxy:
+    name: sollazer_proxy
+  internal:
+    name: sollazer_internal
