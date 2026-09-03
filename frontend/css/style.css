@@ -171,7 +171,7 @@ body.modal-is-open { overflow: hidden; }
 .hero {
   position: relative;
   width: 100%;
-  max-width: 500px;
+  max-width: 650px;
   margin-inline: auto;
   align-self: center;
   /* Proporção fixa 16:9 em qualquer tela (PC, tablet, celular):
@@ -185,7 +185,7 @@ body.modal-is-open { overflow: hidden; }
 /* Navegadores muito antigos sem suporte a aspect-ratio: reserva uma
    altura proporcional à largura da viewport, com teto. */
 @supports not (aspect-ratio: 1) {
-  .hero { height: clamp(150px, 45vw, 281px); }
+  .hero { height: clamp(150px, 45vw, 366px); }
 }
 .hero.is-loading { visibility: hidden; }
 .hero__slides,
@@ -217,9 +217,29 @@ body.modal-is-open { overflow: hidden; }
 .hero__eyebrow { display: block; margin-bottom: 8px; color: #bfefff; font-size: .75rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
 .hero__content h1 { font-size: 1.6rem; margin-bottom: 8px; line-height: 1.2; font-weight: 800; }
 .hero__content p { margin-bottom: 18px; font-size: 0.9rem; opacity: 0.9; }
-.hero__control { position: absolute; top: 50%; z-index: 3; width: 34px; height: 34px; border: 1px solid rgba(255,255,255,.65); border-radius: 50%; background: rgba(0, 61, 88, .55); color: #fff; cursor: pointer; font-size: 1.8rem; line-height: 1; transform: translateY(-50%); }
-.hero__control--prev { left: 12px; }
-.hero__control--next { right: 12px; }
+.hero__control {
+  position: absolute;
+  top: 50%;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid rgba(255,255,255,.65);
+  border-radius: 50%;
+  background: rgba(0, 61, 88, .55);
+  color: #fff;
+  cursor: pointer;
+  font-size: 1.5rem;
+  line-height: 1;
+  transform: translateY(-50%);
+}
+/* Correção óptica: os glifos ‹ › têm folga interna e descem alguns
+   pixels — sobe um tico para o ícone ficar no centro do círculo. */
+.hero__control--prev { left: 12px; padding-bottom: 3px; padding-right: 2px; }
+.hero__control--next { right: 12px; padding-bottom: 3px; padding-left: 2px; }
 .hero__dots { position: absolute; z-index: 3; bottom: 16px; left: 24px; display: flex; gap: 7px; }
 .hero__dot { width: 9px; height: 9px; padding: 0; border: 1px solid #fff; border-radius: 50%; background: transparent; cursor: pointer; }
 .hero__dot.is-active { background: #fff; }
