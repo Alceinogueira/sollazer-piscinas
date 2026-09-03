@@ -170,10 +170,22 @@ body.modal-is-open { overflow: hidden; }
 /* ---------- Hero ---------- */
 .hero {
   position: relative;
+  width: 100%;
+  max-width: 980px;
+  margin-inline: auto;
+  align-self: center;
+  /* Proporção fixa 16:9 em qualquer tela (PC, tablet, celular):
+     a altura acompanha a largura, então o banner nunca "estica"
+     nem domina a dobra da página. */
+  aspect-ratio: 16 / 9;
   border-radius: var(--radius);
   overflow: hidden;
-  height: clamp(180px, 56.25vw, 675px);
   background: #edf2f3;
+}
+/* Navegadores muito antigos sem suporte a aspect-ratio: reserva uma
+   altura proporcional à largura da viewport, com teto. */
+@supports not (aspect-ratio: 1) {
+  .hero { height: clamp(170px, 46vw, 585px); }
 }
 .hero.is-loading { visibility: hidden; }
 .hero__slides,
