@@ -461,7 +461,7 @@ async function loadOffers() {
     loadedOffers = [];
     document.getElementById('heroSlides').innerHTML = `
       <article class="hero__slide is-active" data-slide="0">
-        <img src="assets/angelo-pantazis-h0AnGGgseio-unsplash.jpg" alt="Sollazer Piscinas">
+        <img src="assets/promo-genco-super-promo.jpg" alt="Super Promo Genco - Cloro Granulado Múltipla Ação 10kg: Leve 1 por R$ 199,99 ou Leve 2 por R$ 389,99 à vista">
       </article>
     `;
     document.getElementById('heroDots').innerHTML = '';
