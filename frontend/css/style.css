@@ -171,7 +171,7 @@ body.modal-is-open { overflow: hidden; }
 .hero {
   position: relative;
   width: 100%;
-  max-width: 980px;
+  max-width: 500px;
   margin-inline: auto;
   align-self: center;
   /* Proporção fixa 16:9 em qualquer tela (PC, tablet, celular):
@@ -185,7 +185,7 @@ body.modal-is-open { overflow: hidden; }
 /* Navegadores muito antigos sem suporte a aspect-ratio: reserva uma
    altura proporcional à largura da viewport, com teto. */
 @supports not (aspect-ratio: 1) {
-  .hero { height: clamp(170px, 46vw, 585px); }
+  .hero { height: clamp(150px, 45vw, 281px); }
 }
 .hero.is-loading { visibility: hidden; }
 .hero__slides,
