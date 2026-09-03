@@ -122,6 +122,10 @@ function renderCart() {
 // ---------------------------------------------------------
 // BUSCA E RENDERIZAÇÃO DOS PRODUTOS (consome a API do backend)
 // ---------------------------------------------------------
+// Guarda os produtos já carregados para o banner do topo conseguir abrir
+// o produto certo quando o cliente clica numa oferta vinculada a ele.
+let loadedProducts = [];
+
 async function loadProducts() {
   const grid = document.getElementById('productsGrid');
   const loading = document.getElementById('productsLoading');
@@ -131,14 +135,16 @@ async function loadProducts() {
     if (!response.ok) throw new Error('Falha ao buscar produtos');
     const produtos = await response.json();
 
+    loadedProducts = produtos;
     loading.remove();
     produtos.forEach(produto => grid.appendChild(buildProductCard(produto)));
 
   } catch (err) {
     // Fallback: caso a API ainda não esteja rodando, mostra produtos de exemplo
     console.warn('API indisponível, usando dados de exemplo:', err.message);
+    loadedProducts = getMockProducts();
     loading.remove();
-    getMockProducts().forEach(produto => grid.appendChild(buildProductCard(produto)));
+    loadedProducts.forEach(produto => grid.appendChild(buildProductCard(produto)));
   }
 }
 
@@ -420,6 +426,10 @@ function initHeroCarousel() {
   startHeroTimer();
 }
 
+// Guarda as ofertas carregadas para o clique no banner saber pra onde ir
+// (produto vinculado tem prioridade; senão usa o campo "link").
+let loadedOffers = [];
+
 async function loadOffers() {
   try {
     const response = await fetch(`${API_BASE_URL}/ofertas`);
@@ -427,9 +437,10 @@ async function loadOffers() {
     const ofertas = await response.json();
     if (ofertas.length === 0) throw new Error('Nenhuma oferta cadastrada');
 
+    loadedOffers = ofertas;
     const heroSlides = document.getElementById('heroSlides');
     heroSlides.innerHTML = ofertas.map((oferta, index) => `
-      <article class="hero__slide${index === 0 ? ' is-active' : ''}" data-slide="${index}">
+      <article class="hero__slide${index === 0 ? ' is-active' : ''}" data-slide="${index}" role="button" tabindex="0" aria-label="${oferta.titulo || 'Ver oferta'}">
         <img src="${oferta.imagem}" alt="${oferta.titulo || 'Oferta Sollazer Piscinas'}">
       </article>
     `).join('');
@@ -447,6 +458,7 @@ async function loadOffers() {
     return;
   } catch (err) {
     console.warn('Ofertas da API indisponíveis, usando carrossel padrão:', err.message);
+    loadedOffers = [];
     document.getElementById('heroSlides').innerHTML = `
       <article class="hero__slide is-active" data-slide="0">
         <img src="assets/angelo-pantazis-h0AnGGgseio-unsplash.jpg" alt="Sollazer Piscinas">
@@ -456,5 +468,44 @@ async function loadOffers() {
   }
   initHeroCarousel();
 }
+
+// ---------------------------------------------------------
+// CLIQUE NO BANNER: leva para o produto vinculado (abre a
+// mesma janela de detalhes usada na vitrine) ou, se a oferta
+// não tiver produto vinculado, usa o campo "link" (âncora da
+// página como "#produtos" ou uma URL externa).
+// ---------------------------------------------------------
+function handleHeroSlideActivate(slideEl) {
+  const oferta = loadedOffers[Number(slideEl.dataset.slide)];
+  if (!oferta) return;
+
+  if (oferta.produto_id) {
+    const produto = loadedProducts.find(item => String(item.id) === String(oferta.produto_id));
+    if (produto) {
+      openProductModal(produto);
+      document.getElementById('produtos').scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+  }
+
+  const link = oferta.link || '#produtos';
+  if (link.startsWith('#')) {
+    document.getElementById(link.slice(1))?.scrollIntoView({ behavior: 'smooth' });
+  } else {
+    window.location.href = link;
+  }
+}
+
+document.getElementById('heroSlides').addEventListener('click', event => {
+  const slide = event.target.closest('.hero__slide');
+  if (slide) handleHeroSlideActivate(slide);
+});
+document.getElementById('heroSlides').addEventListener('keydown', event => {
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  const slide = event.target.closest('.hero__slide');
+  if (!slide) return;
+  event.preventDefault();
+  handleHeroSlideActivate(slide);
+});
 
 loadOffers();

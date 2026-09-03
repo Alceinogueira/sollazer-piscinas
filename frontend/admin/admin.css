@@ -23,6 +23,7 @@
 .admin-card h2 { margin-bottom: 18px; font-size: 1.15rem; }
 .admin-form__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
 .admin-form .full { grid-column: 1 / -1; }
+.admin-hint { grid-column: 1 / -1; margin: -8px 0 14px; color: #56727d; font-size: .78rem; font-weight: 400; }
 .admin-form__actions { display: flex; gap: 10px; margin-top: 5px; }
 .admin-form__actions button { flex: 1; }
 .admin-form__actions .secondary { background: #fff; border: 1px solid var(--admin-blue); color: var(--admin-blue); }

@@ -61,11 +61,15 @@ CREATE TABLE IF NOT EXISTS ofertas (
   subtitulo   VARCHAR(255),
   descricao   TEXT,
   imagem_url  VARCHAR(500) NOT NULL,
+  -- Produto para o qual o clique no banner deve levar o cliente.
+  -- Opcional: se NULL, usa o campo "link" (ex: "#produtos" ou URL externa).
+  produto_id  INT NULL,
   link        VARCHAR(255) DEFAULT '#produtos',
   ordem       INT NOT NULL DEFAULT 0,
   ativo       BOOLEAN NOT NULL DEFAULT TRUE,
   criado_em   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE SET NULL
 );
 
 -- ---------------------------------------------------------

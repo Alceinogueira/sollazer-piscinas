@@ -29,14 +29,15 @@ async function api(path, options = {}) {
 }
 
 const productFields = ['productName', 'productDescription', 'productBrand', 'productCategory', 'productPrice', 'productStock', 'productImage', 'productAction', 'productActive'];
-const offerFields = ['offerTitle', 'offerSubtitle', 'offerDescription', 'offerImage', 'offerLink', 'offerOrder', 'offerActive'];
+const offerFields = ['offerTitle', 'offerSubtitle', 'offerDescription', 'offerImage', 'offerProduct', 'offerLink', 'offerOrder', 'offerActive'];
 function value(id) { return document.getElementById(id).value; }
-function setValues(fields, data) { fields.forEach(id => { const key = id === 'productImage' ? 'imagem_url' : id.replace(/^product|^offer/, '').replace(/^[A-Z]/, letter => letter.toLowerCase()); if (data[key] !== undefined) document.getElementById(id).value = data[key] ?? ''; }); }
+function setValues(fields, data) { fields.forEach(id => { const key = id === 'productImage' ? 'imagem_url' : id === 'offerProduct' ? 'produto_id' : id.replace(/^product|^offer/, '').replace(/^[A-Z]/, letter => letter.toLowerCase()); if (data[key] !== undefined) document.getElementById(id).value = data[key] ?? ''; }); }
 function clearForm(formId, fields, titleId, title) { document.getElementById(formId).reset(); document.getElementById(formId.replace('Form', 'Id')).value = ''; document.getElementById(titleId).textContent = title; fields.forEach(id => { if (id.endsWith('Active')) document.getElementById(id).value = 'true'; }); }
 
 async function loadProducts() {
   const products = await api('/admin/produtos');
   updateCategoryOptions(products);
+  updateOfferProductOptions(products);
   document.getElementById('productList').innerHTML = products.map(product => `
     <div class="admin-list__item"><img src="${product.imagem_url || '../assets/IMG-20260820-WA0128-removebg-preview.png'}" alt="">
       <div class="admin-list__info"><strong>${product.nome}</strong><small>${Number(product.preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} · ${product.ativo ? 'visível' : 'oculto'}</small></div>
@@ -49,6 +50,13 @@ function updateCategoryOptions(products) {
   const defaults = ['Cloros', 'Bombas e Filtros', 'Produtos Químicos', 'Diversos'];
   const categories = [...new Set([...defaults, ...products.map(product => product.categoria).filter(Boolean)])].sort((first, second) => first.localeCompare(second, 'pt-BR'));
   document.getElementById('productCategories').innerHTML = categories.map(category => `<option value="${category}"></option>`).join('');
+}
+function updateOfferProductOptions(products) {
+  const select = document.getElementById('offerProduct');
+  const selected = select.value;
+  select.innerHTML = '<option value="">Nenhum — usar o link abaixo</option>' +
+    products.map(product => `<option value="${product.id}">${product.nome}</option>`).join('');
+  select.value = selected;
 }
 function editProduct(product) { document.getElementById('productId').value = product.id; setValues(productFields, product); document.getElementById('productFormTitle').textContent = 'Editar produto'; window.scrollTo({ top: 0, behavior: 'smooth' }); }
 async function deleteProduct(id) { if (!confirm('Excluir este produto?')) return; try { await api(`/admin/produtos/${id}`, { method: 'DELETE' }); await loadProducts(); } catch (error) { alert(error.message); } }
@@ -99,15 +107,17 @@ document.getElementById('offerForm').onsubmit = async event => {
     let imageUrl = value('offerImage');
     const imageFile = document.getElementById('offerImageFile').files[0];
     if (imageFile) {
+      // Rota dedicada do banner: padroniza a imagem para 3840x2160 (16:9) no servidor.
       const formData = new FormData();
-      formData.append('imagens', imageFile);
-      const uploadResponse = await fetch(`${API_BASE_URL}/admin/uploads`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData });
+      formData.append('imagem', imageFile);
+      const uploadResponse = await fetch(`${API_BASE_URL}/admin/uploads/oferta`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData });
       const uploadData = await uploadResponse.json().catch(() => ({}));
       if (!uploadResponse.ok) throw new Error(uploadData.erro || 'Não foi possível enviar a imagem.');
       imageUrl = uploadData.imagem_url;
     }
     if (!imageUrl) throw new Error('Informe uma URL ou envie uma imagem da oferta.');
-    const payload = { titulo: value('offerTitle'), subtitulo: value('offerSubtitle'), descricao: value('offerDescription'), imagem_url: imageUrl, link: value('offerLink'), ordem: Number(value('offerOrder')), ativo: value('offerActive') === 'true' };
+    const produtoId = value('offerProduct');
+    const payload = { titulo: value('offerTitle'), subtitulo: value('offerSubtitle'), descricao: value('offerDescription'), imagem_url: imageUrl, produto_id: produtoId ? Number(produtoId) : null, link: value('offerLink'), ordem: Number(value('offerOrder')), ativo: value('offerActive') === 'true' };
     await api(id ? `/admin/ofertas/${id}` : '/admin/ofertas', { method: id ? 'PUT' : 'POST', body: JSON.stringify(payload) });
     document.getElementById('offerMessage').textContent = 'Oferta salva.';
     clearForm('offerForm', offerFields, 'offerFormTitle', 'Adicionar oferta ao carrossel');

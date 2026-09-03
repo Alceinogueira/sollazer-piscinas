@@ -16,6 +16,9 @@ const ofertaFields = [
       return false;
     }
   }),
+  // Produto para onde o clique no banner deve levar o cliente (opcional).
+  // Quando informado, tem prioridade sobre o campo "link" na hora do clique.
+  body('produto_id').optional({ values: 'null' }).isInt({ min: 1 }).withMessage('Produto inválido.').toInt(),
   body('link').optional({ values: 'null' }).trim().isLength({ max: 255 }),
   body('ordem').optional().isInt({ min: 0 }),
   body('ativo').optional().isBoolean()
@@ -31,16 +34,28 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Confere se o produto vinculado realmente existe antes de gravar a oferta
+// (evita erro genérico de FK e dá uma mensagem clara pro painel).
+async function validarProdutoVinculado(produtoId) {
+  if (!produtoId) return true;
+  const [rows] = await db.execute('SELECT id FROM produtos WHERE id = ?', [produtoId]);
+  return rows.length > 0;
+}
+
 router.post('/', ofertaFields, async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ erros: errors.array() });
-  const { titulo, subtitulo, descricao, imagem_url, link, ordem, ativo } = req.body;
+  const { titulo, subtitulo, descricao, imagem_url, produto_id, link, ordem, ativo } = req.body;
 
   try {
+    if (!(await validarProdutoVinculado(produto_id))) {
+      return res.status(400).json({ erro: 'Produto vinculado não encontrado.' });
+    }
+
     const [result] = await db.execute(
-      `INSERT INTO ofertas (titulo, subtitulo, descricao, imagem_url, link, ordem, ativo)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [titulo, subtitulo || null, descricao || null, imagem_url, link || '#produtos', ordem || 0, ativo ?? true]
+      `INSERT INTO ofertas (titulo, subtitulo, descricao, imagem_url, produto_id, link, ordem, ativo)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [titulo, subtitulo || null, descricao || null, imagem_url, produto_id || null, link || '#produtos', ordem || 0, ativo ?? true]
     );
     res.status(201).json({ id: result.insertId, mensagem: 'Oferta criada com sucesso.' });
   } catch (err) {
@@ -53,13 +68,17 @@ router.put('/:id', ofertaFields, async (req, res) => {
   if (!/^\d+$/.test(req.params.id)) return res.status(400).json({ erro: 'ID inválido.' });
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ erros: errors.array() });
-  const { titulo, subtitulo, descricao, imagem_url, link, ordem, ativo } = req.body;
+  const { titulo, subtitulo, descricao, imagem_url, produto_id, link, ordem, ativo } = req.body;
 
   try {
+    if (!(await validarProdutoVinculado(produto_id))) {
+      return res.status(400).json({ erro: 'Produto vinculado não encontrado.' });
+    }
+
     const [result] = await db.execute(
       `UPDATE ofertas SET titulo = ?, subtitulo = ?, descricao = ?, imagem_url = ?,
-       link = ?, ordem = ?, ativo = ? WHERE id = ?`,
-      [titulo, subtitulo || null, descricao || null, imagem_url, link || '#produtos', ordem || 0, ativo ?? true, req.params.id]
+       produto_id = ?, link = ?, ordem = ?, ativo = ? WHERE id = ?`,
+      [titulo, subtitulo || null, descricao || null, imagem_url, produto_id || null, link || '#produtos', ordem || 0, ativo ?? true, req.params.id]
     );
     if (!result.affectedRows) return res.status(404).json({ erro: 'Oferta não encontrada.' });
     res.json({ mensagem: 'Oferta atualizada com sucesso.' });
