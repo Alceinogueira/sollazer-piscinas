@@ -21,15 +21,30 @@ O projeto publicado na VPS fica em `/opt/sollazer-piscinas`.
 
 ## Enderecos de producao
 
-- Loja: `https://sollazer.alcei.online`
-- Painel: `https://sollazer.alcei.online/admin/login.html`
-- API: `https://sollazer-api.alcei.online/api`
-- Healthcheck: `https://sollazer-api.alcei.online/api/health`
-- MySQL: `sollazer-db.alcei.online:3306`
+- Loja: `https://sollazerpiscina.com.br` (e `https://www.sollazerpiscina.com.br`)
+- Painel: `https://sollazerpiscina.com.br/admin/login.html`
+- API: `https://sollazerpiscina.com.br/api` (o Nginx faz proxy interno para o backend)
+- Healthcheck: `https://sollazerpiscina.com.br/api/health`
+- MySQL: `169.58.246.66:3306` (roteamento TCP; qualquer host que resolva para a VPS)
 
-Os tres registros DNS devem apontar para o IP da VPS antes da emissao dos
-certificados. O email configurado no certificado Let\'s Encrypt e
+Dominio antigo `sollazer.alcei.online` / `sollazer-api.alcei.online` continua
+aceito nas regras do Traefik durante a transicao; pode ser removido depois.
+
+Os registros DNS devem apontar para o IP da VPS (`169.58.246.66`) antes da
+emissao dos certificados. O email do certificado Let\'s Encrypt e
 `alceinogueira1@gmail.com`.
+
+### DNS a configurar no registrador (.com.br)
+
+| Tipo | Nome  | Valor            |
+|------|-------|------------------|
+| A    | `@`   | `169.58.246.66`  |
+| A    | `www` | `169.58.246.66`  |
+
+A loja fala com a API na mesma origem (`/api`), entao **nao e preciso** um
+subdominio `api.` nem certificado separado. A label do backend ainda aceita
+`api.sollazerpiscina.com.br` caso um dia queira expor a API direto — nesse
+caso adicione tambem um registro A para `api`.
 
 ## Primeiro deploy na VPS
 
@@ -131,21 +146,21 @@ Nunca versionar:
 
 ## Configuracao do frontend e API
 
-O arquivo `frontend/js/config.js` usa:
+O arquivo `frontend/js/config.js` tem uma lista `selfHostedHosts`. Para esses
+hosts (local, `sollazerpiscina.com.br`, `www`, e o antigo `sollazer.alcei.online`)
+a loja chama `/api` na propria origem — o Nginx (`frontend/nginx.conf`) faz o
+proxy para o backend. Qualquer outro host cai na URL Vercel de fallback.
 
-- a API do mesmo host em desenvolvimento local;
-- `https://sollazer-api.alcei.online/api` quando a loja esta em producao;
-- a URL Vercel como fallback para outros dominios.
-
-Se o dominio mudar, atualize esse arquivo e as labels correspondentes no
-`docker-compose.yml`. Depois faca commit, push e rebuild do frontend.
+Se ganhar mais um dominio, adicione o host nessa lista e nas labels
+`traefik.http.routers.sollazer.rule` do `docker-compose.yml`. Depois commit,
+push e rebuild do frontend.
 
 ## Traefik e certificados
 
 O Traefik publica as portas `80`, `443` e `3306`.
 
-- O frontend usa a regra HTTP `Host(sollazer.alcei.online)`.
-- O backend usa a regra HTTP `Host(sollazer-api.alcei.online)`.
+- O frontend usa `Host(sollazerpiscina.com.br) || Host(www.sollazerpiscina.com.br) || Host(sollazer.alcei.online)`.
+- O backend usa `Host(api.sollazerpiscina.com.br) || Host(sollazer-api.alcei.online)`.
 - O banco usa roteamento TCP na porta `3306`.
 - HTTP e redirecionado para HTTPS.
 - Os certificados sao renovados automaticamente pelo desafio HTTP.
@@ -168,7 +183,7 @@ O host de conexao do backend dentro do Compose e `db`, e nao `localhost`.
 O acesso externo, quando necessario, usa:
 
 ```text
-Host: sollazer-db.alcei.online
+Host: 169.58.246.66
 Porta: 3306
 Banco: sollazer_piscinas
 Usuario: sollazer
@@ -228,7 +243,7 @@ Confirme que o banco esta `healthy` antes de reiniciar o backend.
 Confirme que os DNS resolvem para a VPS e que as portas 80 e 443 estao livres:
 
 ```bash
-getent hosts sollazer.alcei.online sollazer-api.alcei.online
+getent hosts sollazerpiscina.com.br www.sollazerpiscina.com.br
 ss -lntp | grep -E ':(80|443)\\b'
 docker compose logs --tail 200 traefik
 ```

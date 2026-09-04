@@ -37,7 +37,7 @@ services:
       - uploads:/usr/share/nginx/html/assets/uploads
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.sollazer.rule=Host(`sollazer.alcei.online`)"
+      - "traefik.http.routers.sollazer.rule=Host(`sollazerpiscina.com.br`) || Host(`www.sollazerpiscina.com.br`) || Host(`sollazer.alcei.online`)"
       - "traefik.http.routers.sollazer.entrypoints=websecure"
       - "traefik.http.routers.sollazer.tls.certresolver=letsencrypt"
       - "traefik.http.services.sollazer.loadbalancer.server.port=80"
@@ -67,7 +67,7 @@ services:
       - uploads:/app/../frontend/assets/uploads
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.sollazer-api.rule=Host(`sollazer-api.alcei.online`)"
+      - "traefik.http.routers.sollazer-api.rule=Host(`api.sollazerpiscina.com.br`) || Host(`sollazer-api.alcei.online`)"
       - "traefik.http.routers.sollazer-api.entrypoints=websecure"
       - "traefik.http.routers.sollazer-api.tls.certresolver=letsencrypt"
       - "traefik.http.services.sollazer-api.loadbalancer.server.port=3000"
