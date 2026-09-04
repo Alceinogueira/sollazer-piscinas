@@ -67,7 +67,7 @@ services:
       - uploads:/app/../frontend/assets/uploads
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.sollazer-api.rule=Host(`api.sollazerpiscina.com.br`) || Host(`sollazer-api.alcei.online`)"
+      - "traefik.http.routers.sollazer-api.rule=Host(`sollazer-api.alcei.online`)"
       - "traefik.http.routers.sollazer-api.entrypoints=websecure"
       - "traefik.http.routers.sollazer-api.tls.certresolver=letsencrypt"
       - "traefik.http.services.sollazer-api.loadbalancer.server.port=3000"

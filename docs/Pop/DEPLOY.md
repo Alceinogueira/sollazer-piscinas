@@ -42,9 +42,11 @@ emissao dos certificados. O email do certificado Let\'s Encrypt e
 | A    | `www` | `169.58.246.66`  |
 
 A loja fala com a API na mesma origem (`/api`), entao **nao e preciso** um
-subdominio `api.` nem certificado separado. A label do backend ainda aceita
-`api.sollazerpiscina.com.br` caso um dia queira expor a API direto — nesse
-caso adicione tambem um registro A para `api`.
+subdominio `api.` nem certificado separado. Se um dia quiser expor a API
+direto num subdominio, crie o registro A para `api` primeiro e so entao
+adicione `Host(\`api.sollazerpiscina.com.br\`)` na regra do backend no
+`docker-compose.yml` — nao adicione a regra antes do DNS existir, senao o
+Traefik fica tentando emitir certificado e falhando.
 
 ## Primeiro deploy na VPS
 
@@ -160,7 +162,7 @@ push e rebuild do frontend.
 O Traefik publica as portas `80`, `443` e `3306`.
 
 - O frontend usa `Host(sollazerpiscina.com.br) || Host(www.sollazerpiscina.com.br) || Host(sollazer.alcei.online)`.
-- O backend usa `Host(api.sollazerpiscina.com.br) || Host(sollazer-api.alcei.online)`.
+- O backend usa `Host(sollazer-api.alcei.online)` (a loja em `sollazerpiscina.com.br` fala com a API via proxy do Nginx em `/api`, nao direto por esse router).
 - O banco usa roteamento TCP na porta `3306`.
 - HTTP e redirecionado para HTTPS.
 - Os certificados sao renovados automaticamente pelo desafio HTTP.
