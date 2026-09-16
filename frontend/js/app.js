@@ -53,6 +53,19 @@ function removeFromCart(productId) {
   saveCart(cart);
 }
 
+function updateCartQuantity(productId, quantity) {
+  const cart = getCart();
+  const item = cart.find(item => String(item.id) === String(productId));
+  if (!item) return;
+
+  if (quantity < 1) {
+    removeFromCart(productId);
+    return;
+  }
+  item.quantity = quantity;
+  saveCart(cart);
+}
+
 function clearCart() {
   localStorage.removeItem(CART_STORAGE_KEY);
   renderCart();
@@ -99,7 +112,13 @@ function renderCart() {
       <img class="cart-item__img" src="${item.imagem}" alt="${item.nome}">
       <div class="cart-item__info">
         <strong>${item.nome}</strong>
-        <small>${formatBRL(Number(item.preco))} x ${item.quantity} = ${formatBRL(Number(item.preco) * item.quantity)}</small>
+        <small>${formatBRL(Number(item.preco))} cada</small>
+        <div class="qty-selector qty-selector--cart">
+          <button type="button" class="qty-minus" data-id="${item.id}" aria-label="Diminuir quantidade">-</button>
+          <input type="number" class="qty-input" data-id="${item.id}" value="${item.quantity}" min="1">
+          <button type="button" class="qty-plus" data-id="${item.id}" aria-label="Aumentar quantidade">+</button>
+        </div>
+        <small class="cart-item__subtotal">${formatBRL(Number(item.preco) * item.quantity)}</small>
       </div>
       <button class="cart-item__remove" data-id="${item.id}" aria-label="Remover item">×</button>
     `;
@@ -113,9 +132,26 @@ function renderCart() {
   totalEl.textContent = formatBRL(total);
   countEl.textContent = String(totalItems);
 
-  // Liga o evento de remover em cada botão criado dinamicamente
+  // Liga os eventos de remover e editar quantidade em cada item criado dinamicamente
   cartItemsEl.querySelectorAll('.cart-item__remove').forEach(btn => {
     btn.addEventListener('click', () => removeFromCart(btn.dataset.id));
+  });
+  cartItemsEl.querySelectorAll('.qty-minus').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const current = getCart().find(item => String(item.id) === String(btn.dataset.id));
+      if (current) updateCartQuantity(btn.dataset.id, current.quantity - 1);
+    });
+  });
+  cartItemsEl.querySelectorAll('.qty-plus').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const current = getCart().find(item => String(item.id) === String(btn.dataset.id));
+      if (current) updateCartQuantity(btn.dataset.id, current.quantity + 1);
+    });
+  });
+  cartItemsEl.querySelectorAll('.qty-input').forEach(input => {
+    input.addEventListener('change', () => {
+      updateCartQuantity(input.dataset.id, parseInt(input.value, 10) || 1);
+    });
   });
 }
 
