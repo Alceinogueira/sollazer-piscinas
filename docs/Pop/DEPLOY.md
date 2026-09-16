@@ -208,6 +208,21 @@ Sem o tunel aberto, a porta simplesmente nao responde de fora da VPS.
 Nao use `docker compose down -v` em producao: isso remove os volumes do banco,
 uploads e certificados.
 
+## Acesso SSH e firewall
+
+Login de root por senha esta desativado no sshd (`PermitRootLogin prohibit-password`,
+`PasswordAuthentication no`) — so entra por chave publica. Se precisar dar
+acesso a mais alguem, adicione a chave publica dele em `~/.ssh/authorized_keys`
+no servidor (nunca reative senha).
+
+O `ufw` esta ativo e so libera `22` (SSH), `80` e `443` (HTTP/HTTPS); tudo
+mais chega bloqueado por padrao. Comandos uteis:
+
+```bash
+ufw status verbose
+ufw allow <porta>/tcp comment "motivo"   # antes de abrir qualquer porta nova
+```
+
 ## Backup e restauracao
 
 Crie um backup antes de alteracoes de schema ou operacoes destrutivas:
