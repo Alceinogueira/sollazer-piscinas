@@ -25,7 +25,9 @@ O projeto publicado na VPS fica em `/opt/sollazer-piscinas`.
 - Painel: `https://sollazerpiscina.com.br/admin/login.html`
 - API: `https://sollazerpiscina.com.br/api` (o Nginx faz proxy interno para o backend)
 - Healthcheck: `https://sollazerpiscina.com.br/api/health`
-- MySQL: `169.58.246.66:3306` (roteamento TCP; qualquer host que resolva para a VPS)
+- MySQL: **sem porta publica** — só acessível de dentro da rede Docker da VPS
+  (o backend fala com `db:3306` internamente) ou via túnel SSH (ver seção
+  "Banco de dados" abaixo).
 
 Dominio antigo `sollazer.alcei.online` / `sollazer-api.alcei.online` continua
 aceito nas regras do Traefik durante a transicao; pode ser removido depois.
@@ -61,11 +63,15 @@ curl -fsSL https://get.docker.com | sh
 systemctl enable --now docker
 ```
 
-Clone o repositorio e inicie a stack:
+Clone o repositorio, crie o `.env` com segredos reais e inicie a stack:
 
 ```bash
 git clone https://github.com/Alceinogueira/sollazer-piscinas.git /opt/sollazer-piscinas
 cd /opt/sollazer-piscinas
+cp .env.example .env
+# edite o .env e preencha DB_PASSWORD, MYSQL_ROOT_PASSWORD e JWT_SECRET
+# com valores fortes (openssl rand -base64 24 / openssl rand -hex 32).
+# Esse .env NUNCA é commitado (já está no .gitignore).
 docker compose config --quiet
 docker compose up -d --build
 ```
@@ -159,11 +165,13 @@ push e rebuild do frontend.
 
 ## Traefik e certificados
 
-O Traefik publica as portas `80`, `443` e `3306`.
+O Traefik publica so as portas `80` e `443`.
 
 - O frontend usa `Host(sollazerpiscina.com.br) || Host(www.sollazerpiscina.com.br) || Host(sollazer.alcei.online)`.
 - O backend usa `Host(sollazer-api.alcei.online)` (a loja em `sollazerpiscina.com.br` fala com a API via proxy do Nginx em `/api`, nao direto por esse router).
-- O banco usa roteamento TCP na porta `3306`.
+- O banco `db` NAO tem router no Traefik nem porta publicada — so alcancavel
+  de dentro da rede Docker interna. Ver "Banco de dados" abaixo pra acesso
+  externo (tunel SSH).
 - HTTP e redirecionado para HTTPS.
 - Os certificados sao renovados automaticamente pelo desafio HTTP.
 
@@ -182,19 +190,20 @@ Traefik nao deve ser publicado sem autenticacao.
 ## Banco de dados
 
 O host de conexao do backend dentro do Compose e `db`, e nao `localhost`.
-O acesso externo, quando necessario, usa:
+O MySQL **nao tem porta publica** — nem o Traefik nem o Compose expoem `3306`
+pra internet, de proposito (ja aconteceu de ficar exposto com senha fraca;
+nao repetir isso).
 
-```text
-Host: 169.58.246.66
-Porta: 3306
-Banco: sollazer_piscinas
-Usuario: sollazer
+Pra acessar com um cliente grafico (TablePlus, MySQL Workbench, etc.) da sua
+maquina, abra um tunel SSH e conecte no `localhost` do seu lado:
+
+```bash
+ssh -N -L 3306:127.0.0.1:3306 root@169.58.246.66
+# deixa esse comando rodando num terminal, e no cliente MySQL conecte em:
+# host=127.0.0.1 porta=3306 usuario=sollazer senha=(a do .env da VPS)
 ```
 
-O endpoint do banco e MySQL TCP, nao HTTPS. O certificado Let\'s Encrypt dos
-subdominios HTTP nao protege o handshake nativo do MySQL. Como a porta esta
-publica, use senha forte, restrinja por firewall aos IPs necessarios e prefira
-TLS nativo do MySQL ou tunel SSH.
+Sem o tunel aberto, a porta simplesmente nao responde de fora da VPS.
 
 Nao use `docker compose down -v` em producao: isso remove os volumes do banco,
 uploads e certificados.

@@ -11,7 +11,6 @@ services:
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
       - "--entrypoints.websecure.address=:443"
-      - "--entrypoints.mysql.address=:3306"
       - "--certificatesresolvers.letsencrypt.acme.email=alceinogueira1@gmail.com"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
       - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
@@ -19,7 +18,6 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "3306:3306"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - letsencrypt:/letsencrypt
@@ -56,10 +54,10 @@ services:
       PORT: 3000
       DB_HOST: db
       DB_USER: sollazer
-      DB_PASSWORD: sollazer_local
+      DB_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD no .env}
       DB_NAME: sollazer_piscinas
       DB_PORT: 3306
-      JWT_SECRET: sollazer_local_jwt_secret_change_me
+      JWT_SECRET: ${JWT_SECRET:?defina JWT_SECRET no .env}
       JWT_EXPIRES_IN: 8h
     expose:
       - "3000"
@@ -81,8 +79,8 @@ services:
     environment:
       MYSQL_DATABASE: sollazer_piscinas
       MYSQL_USER: sollazer
-      MYSQL_PASSWORD: sollazer_local
-      MYSQL_ROOT_PASSWORD: root_local_change_me
+      MYSQL_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD no .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?defina MYSQL_ROOT_PASSWORD no .env}
     volumes:
       - mysql_data:/var/lib/mysql
       - ./backend/database.sql:/docker-entrypoint-initdb.d/01-database.sql:ro
@@ -91,13 +89,11 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
-    labels:
-      - "traefik.enable=true"
-      - "traefik.tcp.routers.sollazer-db.rule=HostSNI(`*`)"
-      - "traefik.tcp.routers.sollazer-db.entrypoints=mysql"
-      - "traefik.tcp.services.sollazer-db.loadbalancer.server.port=3306"
+    # Sem porta publicada e sem router no Traefik: o MySQL só é alcançável
+    # de dentro da rede interna do Compose (o backend fala com ele pelo
+    # hostname "db"). Acesso externo (GUI local) é feito por túnel SSH —
+    # ver docs/Pop/DEPLOY.md.
     networks:
-      - proxy
       - internal
     restart: unless-stopped
 
