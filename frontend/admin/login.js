@@ -23,6 +23,12 @@ document.getElementById('loginForm').addEventListener('submit', async event => {
     localStorage.setItem('sollazer_admin_token', data.token);
     localStorage.setItem('sollazer_admin_name', data.admin.nome);
     localStorage.setItem('sollazer_admin_role', data.admin.papel || 'funcionario');
+    // "cidade" vazia = esse login enxerga/gerencia todas as cidades.
+    if (data.admin.cidade) {
+      localStorage.setItem('sollazer_admin_cidade', data.admin.cidade);
+    } else {
+      localStorage.removeItem('sollazer_admin_cidade');
+    }
     window.location.href = 'dashboard.html';
   } catch (error) {
     message.textContent = error.message;

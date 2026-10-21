@@ -32,7 +32,7 @@ router.post(
     try {
       // Query preparada — protege contra SQL Injection no campo e-mail.
       const [rows] = await db.execute(
-        'SELECT id, nome, usuario, email, senha_hash, papel FROM administradores WHERE usuario = ?',
+        'SELECT id, nome, usuario, email, senha_hash, papel, cidade FROM administradores WHERE usuario = ?',
         [usuario]
       );
 
@@ -50,13 +50,15 @@ router.post(
       }
 
       // Gera o token JWT que o painel deve enviar em "Authorization: Bearer <token>".
+      // "cidade" vai no token pra o backend sempre confiar nela (nunca no
+      // que o cliente envia) — null = admin enxerga/gerencia todas as cidades.
       const token = jwt.sign(
-        { id: admin.id, usuario: admin.usuario, nome: admin.nome, papel: admin.papel },
+        { id: admin.id, usuario: admin.usuario, nome: admin.nome, papel: admin.papel, cidade: admin.cidade },
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_EXPIRES_IN || '8h' }
       );
 
-      res.json({ token, admin: { id: admin.id, nome: admin.nome, usuario: admin.usuario, papel: admin.papel } });
+      res.json({ token, admin: { id: admin.id, nome: admin.nome, usuario: admin.usuario, papel: admin.papel, cidade: admin.cidade } });
     } catch (err) {
       console.error(err);
       res.status(500).json({ erro: 'Erro ao autenticar.' });

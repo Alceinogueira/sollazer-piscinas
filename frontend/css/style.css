@@ -159,6 +159,61 @@ ul { list-style: none; }
 .cart-backdrop.is-open { display: none !important; pointer-events: none; }
 body.modal-is-open { overflow: hidden; }
 
+/* ---------- Seleção de cidade (tela cheia antes da loja) ---------- */
+.city-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: linear-gradient(160deg, var(--brand-navy) 0%, var(--brand-wave-dark) 55%, var(--brand-blue) 100%);
+}
+.city-gate__box {
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  background: var(--color-white);
+  border-radius: var(--radius);
+  padding: 36px 28px;
+  box-shadow: 0 20px 50px rgba(4, 25, 34, .35);
+}
+.city-gate__logo { width: 120px; margin-bottom: 18px; }
+.city-gate__box h1 { font-size: 1.3rem; color: var(--brand-navy); margin-bottom: 6px; }
+.city-gate__box p { font-size: 0.85rem; color: #5b6870; margin-bottom: 22px; }
+.city-gate__options { display: flex; flex-direction: column; gap: 10px; }
+.city-gate__btn {
+  padding: 14px;
+  border: 1.5px solid var(--brand-blue);
+  border-radius: 8px;
+  background: var(--color-white);
+  color: var(--brand-navy);
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease;
+}
+.city-gate__btn:hover,
+.city-gate__btn:focus-visible { background: var(--brand-blue); color: var(--color-white); }
+
+/* Botão de trocar cidade, no header */
+.city-toggle {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  padding: 7px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--brand-navy);
+  cursor: pointer;
+  white-space: nowrap;
+}
+/* Tela bem estreita: mantém só o ícone, sem espremer os outros botões do header */
+@media (max-width: 420px) {
+  .city-toggle__label { display: none; }
+}
+
 /* ---------- Linha superior: Hero + Carrinho ---------- */
 .top-row {
   display: flex;

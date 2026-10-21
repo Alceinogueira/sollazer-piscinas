@@ -8,6 +8,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const { body, validationResult } = require('express-validator');
+const { CIDADES_VALIDAS } = require('../config/cidades');
 
 // POST /api/orcamentos -> cria uma solicitação de orçamento com seus itens
 router.post(
@@ -16,6 +17,7 @@ router.post(
     body('cliente_nome').optional().trim().isLength({ max: 150 }),
     body('cliente_email').optional().trim().isEmail().withMessage('E-mail inválido.'),
     body('cliente_telefone').optional().trim().isLength({ max: 30 }),
+    body('cidade').isIn(CIDADES_VALIDAS).withMessage('Cidade inválida.'),
     body('itens').isArray({ min: 1 }).withMessage('O orçamento precisa ter ao menos um item.'),
     body('itens.*.id').notEmpty().withMessage('Item sem ID de produto.'),
     body('itens.*.quantity').isInt({ min: 1 }).withMessage('Quantidade inválida.')
@@ -26,7 +28,7 @@ router.post(
       return res.status(400).json({ erros: errors.array() });
     }
 
-    const { cliente_nome, cliente_email, cliente_telefone, itens, observacoes } = req.body;
+    const { cliente_nome, cliente_email, cliente_telefone, cidade, itens, observacoes } = req.body;
 
     // Usamos uma transação: se algum item falhar, nada é gravado.
     const connection = await db.getConnection();
@@ -34,9 +36,9 @@ router.post(
       await connection.beginTransaction();
 
       const [orcamentoResult] = await connection.execute(
-        `INSERT INTO orcamentos (cliente_nome, cliente_email, cliente_telefone, observacoes)
-         VALUES (?, ?, ?, ?)`,
-        [cliente_nome || null, cliente_email || null, cliente_telefone || null, observacoes || null]
+        `INSERT INTO orcamentos (cliente_nome, cliente_email, cliente_telefone, cidade, observacoes)
+         VALUES (?, ?, ?, ?, ?)`,
+        [cliente_nome || null, cliente_email || null, cliente_telefone || null, cidade, observacoes || null]
       );
       const orcamentoId = orcamentoResult.insertId;
 
@@ -44,9 +46,10 @@ router.post(
 
       for (const item of itens) {
         // Busca o preço REAL do produto no banco (nunca confiar no preço enviado pelo cliente).
+        // Também confere que o produto é da mesma cidade do orçamento.
         const [produtoRows] = await connection.execute(
-          'SELECT preco FROM produtos WHERE id = ? AND ativo = TRUE',
-          [item.id]
+          'SELECT preco FROM produtos WHERE id = ? AND ativo = TRUE AND cidade = ?',
+          [item.id, cidade]
         );
 
         if (produtoRows.length === 0) {

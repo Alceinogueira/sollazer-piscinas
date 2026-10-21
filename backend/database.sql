@@ -26,6 +26,9 @@ CREATE TABLE IF NOT EXISTS administradores (
   -- 'admin'       = dono da loja, acesso total (produtos + ofertas + excluir)
   -- 'funcionario' = acesso restrito (produtos: criar/editar/alterar preço, sem excluir e sem ofertas)
   papel         ENUM('admin', 'funcionario') NOT NULL DEFAULT 'funcionario',
+  -- NULL = enxerga/gerencia todas as cidades (dono da loja). Um valor
+  -- aqui restringe o login a uma única cidade (ver tabela "produtos").
+  cidade        ENUM('trancoso', 'eunapolis', 'arraial_dajuda') NULL,
   criado_em     TIMESTAMP     DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -41,6 +44,10 @@ CREATE TABLE IF NOT EXISTS produtos (
   descricao     TEXT,
   marca         VARCHAR(80),                  -- ex: Genco, Jacuzzi
   categoria     VARCHAR(80),                  -- ex: Filtros, Bombas, Químicos, Capas
+  -- Cada cidade tem seu próprio catálogo — o cliente escolhe a cidade
+  -- antes de ver a loja (ver frontend/js/app.js). NULL = não aparece
+  -- em nenhuma cidade até ser atribuído no painel admin.
+  cidade        ENUM('trancoso', 'eunapolis', 'arraial_dajuda') NULL,
   preco         DECIMAL(10,2)  NOT NULL DEFAULT 0,
   estoque       INT            NOT NULL DEFAULT 0,
   imagem_url    VARCHAR(255),
@@ -49,7 +56,8 @@ CREATE TABLE IF NOT EXISTS produtos (
   tipo_acao     ENUM('carrinho', 'orcamento') NOT NULL DEFAULT 'carrinho',
   ativo         BOOLEAN        NOT NULL DEFAULT TRUE,
   criado_em     TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
-  atualizado_em TIMESTAMP      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  atualizado_em TIMESTAMP      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_produtos_cidade (cidade)
 );
 
 -- ---------------------------------------------------------
@@ -81,6 +89,7 @@ CREATE TABLE IF NOT EXISTS orcamentos (
   cliente_nome    VARCHAR(150),
   cliente_email   VARCHAR(150),
   cliente_telefone VARCHAR(30),
+  cidade          ENUM('trancoso', 'eunapolis', 'arraial_dajuda') NULL,
   status          ENUM('pendente', 'em_analise', 'respondido', 'cancelado') NOT NULL DEFAULT 'pendente',
   valor_total_estimado DECIMAL(10,2) DEFAULT 0,
   observacoes     TEXT,

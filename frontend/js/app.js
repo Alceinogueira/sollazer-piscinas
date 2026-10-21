@@ -13,18 +13,44 @@
 // ---------------------------------------------------------
 // Ajuste esta URL para o endereço real do seu backend em produção.
 const API_BASE_URL = window.SOLLAZER_API_BASE_URL || 'http://localhost:3000/api';
-const CART_STORAGE_KEY = 'sollazer_cart';
 
 // ---------------------------------------------------------
-// ESTADO DO CARRINHO (persistido em LocalStorage)
+// CIDADE SELECIONADA
+// Cada cidade tem catálogo e preços próprios — o cliente escolhe
+// antes de ver a loja (tela cheia em #cityGate). A escolha fica
+// salva no navegador e também entra na URL (?cidade=...) pra dar
+// pra compartilhar/favoritar o link já na cidade certa.
 // ---------------------------------------------------------
+const CIDADES = { trancoso: 'Trancoso', eunapolis: 'Eunápolis', arraial_dajuda: "Arraial D'Ajuda" };
+const CIDADE_STORAGE_KEY = 'sollazer_cidade';
+
+function getCidade() {
+  return localStorage.getItem(CIDADE_STORAGE_KEY);
+}
+
+function setCidade(cidade) {
+  localStorage.setItem(CIDADE_STORAGE_KEY, cidade);
+  const url = new URL(window.location.href);
+  url.searchParams.set('cidade', cidade);
+  window.history.replaceState({}, '', url);
+}
+
+// ---------------------------------------------------------
+// ESTADO DO CARRINHO (persistido em LocalStorage, um por cidade —
+// produtos e preços são diferentes entre elas, então o carrinho
+// de Trancoso não pode aparecer pro cliente que está em Eunápolis).
+// ---------------------------------------------------------
+function cartStorageKey() {
+  return `sollazer_cart_${getCidade() || 'geral'}`;
+}
+
 function getCart() {
-  const raw = localStorage.getItem(CART_STORAGE_KEY);
+  const raw = localStorage.getItem(cartStorageKey());
   return raw ? JSON.parse(raw) : [];
 }
 
 function saveCart(cart) {
-  localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+  localStorage.setItem(cartStorageKey(), JSON.stringify(cart));
   renderCart();
 }
 
@@ -67,7 +93,7 @@ function updateCartQuantity(productId, quantity) {
 }
 
 function clearCart() {
-  localStorage.removeItem(CART_STORAGE_KEY);
+  localStorage.removeItem(cartStorageKey());
   renderCart();
 }
 
@@ -164,22 +190,24 @@ let loadedProducts = [];
 
 async function loadProducts() {
   const grid = document.getElementById('productsGrid');
-  const loading = document.getElementById('productsLoading');
+  // innerHTML (em vez de só remover #productsLoading) deixa a função segura
+  // pra rodar de novo quando o cliente troca de cidade no meio da visita.
+  grid.innerHTML = '<p class="products__loading">Carregando produtos...</p>';
 
   try {
-    const response = await fetch(`${API_BASE_URL}/produtos`);
+    const response = await fetch(`${API_BASE_URL}/produtos?cidade=${encodeURIComponent(getCidade())}`);
     if (!response.ok) throw new Error('Falha ao buscar produtos');
     const produtos = await response.json();
 
     loadedProducts = produtos;
-    loading.remove();
+    grid.innerHTML = '';
     produtos.forEach(produto => grid.appendChild(buildProductCard(produto)));
 
   } catch (err) {
     // Fallback: caso a API ainda não esteja rodando, mostra produtos de exemplo
     console.warn('API indisponível, usando dados de exemplo:', err.message);
     loadedProducts = getMockProducts();
-    loading.remove();
+    grid.innerHTML = '';
     loadedProducts.forEach(produto => grid.appendChild(buildProductCard(produto)));
   }
 }
@@ -300,6 +328,14 @@ function getMockProducts() {
 // ---------------------------------------------------------
 // AÇÃO DO CARRINHO (orçamento)
 // ---------------------------------------------------------
+// Número de WhatsApp de cada unidade — TODO: confirmar os números reais de
+// Eunápolis e Arraial D'Ajuda (por enquanto os três usam o mesmo).
+const WHATSAPP_POR_CIDADE = {
+  trancoso: '5573999809030',
+  eunapolis: '5573999809030',
+  arraial_dajuda: '5573999809030'
+};
+
 function buildQuoteMessage(cart) {
   const items = cart.map((item, index) => {
     const subtotal = Number(item.preco || 0) * item.quantity;
@@ -312,7 +348,7 @@ function buildQuoteMessage(cart) {
   const total = cart.reduce((sum, item) => sum + Number(item.preco || 0) * item.quantity, 0);
 
   return [
-    'Olá! Gostaria de solicitar um orçamento na Sollazer Piscinas.',
+    `Olá! Gostaria de solicitar um orçamento na Sollazer Piscinas (unidade ${CIDADES[getCidade()] || ''}).`,
     '',
     'Itens selecionados:',
     items,
@@ -327,7 +363,9 @@ async function handleQuoteRequest() {
   const cart = getCart();
   if (cart.length === 0) return alert('Adicione itens para solicitar um orçamento.');
 
-  const whatsappUrl = `https://wa.me/5573999809030?text=${encodeURIComponent(buildQuoteMessage(cart))}`;
+  const cidade = getCidade();
+  const numeroWhatsapp = WHATSAPP_POR_CIDADE[cidade] || WHATSAPP_POR_CIDADE.trancoso;
+  const whatsappUrl = `https://wa.me/${numeroWhatsapp}?text=${encodeURIComponent(buildQuoteMessage(cart))}`;
   window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
 
   try {
@@ -335,7 +373,7 @@ async function handleQuoteRequest() {
     const response = await fetch(`${API_BASE_URL}/orcamentos`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ itens: cart })
+      body: JSON.stringify({ itens: cart, cidade })
     });
     if (!response.ok) throw new Error('Erro ao enviar orçamento');
 
@@ -424,8 +462,43 @@ document.querySelectorAll('[data-category]').forEach(control => {
 // INICIALIZAÇÃO
 // ---------------------------------------------------------
 document.getElementById('year').textContent = new Date().getFullYear();
-loadProducts();
 renderCart();
+
+// ---------------------------------------------------------
+// TELA DE SELEÇÃO DE CIDADE
+// Se o cliente já escolheu antes (localStorage), o script inline
+// no topo do <body> já escondeu a tela e a loja carrega direto.
+// Senão, só busca produtos depois que ele escolher uma cidade.
+// ---------------------------------------------------------
+function initCityGate() {
+  const gate = document.getElementById('cityGate');
+  const toggleLabel = document.getElementById('cityToggleLabel');
+
+  function atualizarRotuloCidade() {
+    toggleLabel.textContent = CIDADES[getCidade()] || 'Cidade';
+  }
+
+  async function escolherCidade(cidade) {
+    setCidade(cidade);
+    atualizarRotuloCidade();
+    gate.hidden = true;
+    await loadProducts();
+    // Reaplica o filtro de categoria ativo (se houver) nos cards da cidade nova.
+    const categoriaAtiva = document.querySelector('.products-filter__button.is-active')?.dataset.category;
+    if (categoriaAtiva) filterProducts(categoriaAtiva);
+    renderCart();
+  }
+
+  gate.querySelectorAll('[data-cidade]').forEach(button => {
+    button.addEventListener('click', () => escolherCidade(button.dataset.cidade));
+  });
+  document.getElementById('cityToggle').addEventListener('click', () => { gate.hidden = false; });
+
+  atualizarRotuloCidade();
+  if (gate.hidden) loadProducts(); // cidade já escolhida numa visita anterior
+}
+
+initCityGate();
 
 // ---------------------------------------------------------
 // CARROSSEL DE OFERTAS DO HERO

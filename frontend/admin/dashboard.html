@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Painel do funcionário | Sollazer Piscinas</title>
-  <link rel="stylesheet" href="../css/style.css?v=20260822-3">
-  <link rel="stylesheet" href="admin.css?v=20260822-3">
+  <link rel="stylesheet" href="../css/style.css?v=20261021-1">
+  <link rel="stylesheet" href="admin.css?v=20261021-1">
 </head>
 <body class="admin-page">
   <header class="admin-header"><div class="admin-header__inner">
@@ -15,6 +15,18 @@
   <main class="admin-main">
     <h1>Painel da loja</h1>
     <p class="admin-subtitle">Olá, <span id="adminName">funcionário</span>. Gerencie produtos e ofertas.</p>
+    <div class="admin-city-bar">
+      <label>Cidade do catálogo
+        <select id="cityFilter">
+          <option value="">Todas as cidades</option>
+          <option value="trancoso">Trancoso</option>
+          <option value="eunapolis">Eunápolis</option>
+          <option value="arraial_dajuda">Arraial D'Ajuda</option>
+          <option value="sem_cidade">Sem cidade atribuída (catálogo antigo)</option>
+        </select>
+      </label>
+      <p class="admin-hint">Cada cidade tem seu próprio catálogo e preços. Escolha a cidade antes de cadastrar ou editar um produto.</p>
+    </div>
     <div class="admin-grid">
       <section class="admin-card">
         <h2 id="productFormTitle">Adicionar produto</h2>
@@ -22,6 +34,11 @@
           <input type="hidden" id="productId">
           <div class="admin-form__grid">
             <label>Nome<input id="productName" required maxlength="150"></label>
+            <label>Cidade<select id="productCity" required>
+              <option value="trancoso">Trancoso</option>
+              <option value="eunapolis">Eunápolis</option>
+              <option value="arraial_dajuda">Arraial D'Ajuda</option>
+            </select></label>
             <label>Preço<input id="productPrice" type="number" min="0" step="0.01" required></label>
             <label>Estoque<input id="productStock" type="number" min="0" step="1" value="0"></label>
             <label>Tipo de ação<select id="productAction"><option value="carrinho">Adicionar ao carrinho</option><option value="orcamento">Solicitar orçamento</option></select></label>
@@ -61,6 +78,6 @@
     </div>
   </main>
   <script src="../js/config.js?v=20260903-1"></script>
-  <script src="dashboard.js?v=20260903-1"></script>
+  <script src="dashboard.js?v=20261021-1"></script>
 </body>
 </html>

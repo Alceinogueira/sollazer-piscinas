@@ -7,17 +7,24 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
+const { CIDADES_VALIDAS } = require('../config/cidades');
 
-// GET /api/produtos  -> lista todos os produtos ativos
+// GET /api/produtos?cidade=trancoso  -> lista os produtos ativos DAQUELA cidade
 router.get('/', async (req, res) => {
+  const { cidade } = req.query;
+  if (!CIDADES_VALIDAS.includes(cidade)) {
+    return res.status(400).json({ erro: `Informe uma cidade válida (${CIDADES_VALIDAS.join(', ')}).` });
+  }
+
   try {
-    // Query estática (sem input do usuário) — ainda assim usamos
-    // execute() do mysql2, que sempre prepara a query no servidor.
+    // Query preparada — "cidade" vem validado contra a lista acima,
+    // e ainda assim vai como placeholder "?", nunca concatenado.
     const [produtos] = await db.execute(
       `SELECT id, nome, descricao, marca, categoria, preco, imagem_url AS imagem, imagens, tipo_acao
        FROM produtos
-       WHERE ativo = TRUE
-       ORDER BY criado_em DESC`
+       WHERE ativo = TRUE AND cidade = ?
+       ORDER BY criado_em DESC`,
+      [cidade]
     );
     res.json(produtos.map(produto => ({ ...produto, imagens: parseImages(produto.imagens, produto.imagem) })));
   } catch (err) {

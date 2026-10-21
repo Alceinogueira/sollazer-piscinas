@@ -2,11 +2,33 @@ const API_BASE_URL = window.SOLLAZER_API_BASE_URL || 'http://localhost:3000/api'
 const token = localStorage.getItem('sollazer_admin_token');
 if (!token) window.location.href = 'login.html';
 const isAdmin = localStorage.getItem('sollazer_admin_role') === 'admin';
+// Vazio = esse login enxerga/gerencia o catálogo de todas as cidades.
+const adminCidade = localStorage.getItem('sollazer_admin_cidade') || '';
+const CIDADES = { trancoso: 'Trancoso', eunapolis: 'Eunápolis', arraial_dajuda: "Arraial D'Ajuda" };
 document.getElementById('adminName').textContent = localStorage.getItem('sollazer_admin_name') || 'funcionário';
 
 // Ofertas do carrossel e exclusão de produto são exclusivas do admin (dono da loja).
 // Funcionário só cria/edita produto e altera preço.
 if (!isAdmin) document.getElementById('offersSection').style.display = 'none';
+
+// ---------------------------------------------------------
+// FILTRO/CIDADE DO CATÁLOGO
+// Login restrito a uma cidade: trava o filtro e o campo do
+// formulário nela, sem opção de ver/editar outra cidade.
+// ---------------------------------------------------------
+const cityFilter = document.getElementById('cityFilter');
+const productCitySelect = document.getElementById('productCity');
+if (adminCidade) {
+  cityFilter.innerHTML = `<option value="${adminCidade}">${CIDADES[adminCidade] || adminCidade}</option>`;
+  cityFilter.value = adminCidade;
+  cityFilter.disabled = true;
+  productCitySelect.value = adminCidade;
+  productCitySelect.disabled = true;
+}
+cityFilter.addEventListener('change', () => {
+  if (CIDADES[cityFilter.value]) productCitySelect.value = cityFilter.value;
+  loadProducts();
+});
 
 document.getElementById('logoutButton').onclick = () => {
   localStorage.removeItem('sollazer_admin_token');
@@ -28,19 +50,24 @@ async function api(path, options = {}) {
   return data;
 }
 
-const productFields = ['productName', 'productDescription', 'productBrand', 'productCategory', 'productPrice', 'productStock', 'productImage', 'productAction', 'productActive'];
+const productFields = ['productName', 'productDescription', 'productBrand', 'productCategory', 'productCity', 'productPrice', 'productStock', 'productImage', 'productAction', 'productActive'];
 const offerFields = ['offerTitle', 'offerSubtitle', 'offerDescription', 'offerImage', 'offerProduct', 'offerLink', 'offerOrder', 'offerActive'];
+// Mapa explícito DOM-id -> campo da API (os nomes da API são em
+// português e não batem com um id em inglês "deduzido" por regex).
+const PRODUCT_API_FIELD = { productName: 'nome', productDescription: 'descricao', productBrand: 'marca', productCategory: 'categoria', productCity: 'cidade', productPrice: 'preco', productStock: 'estoque', productImage: 'imagem_url', productAction: 'tipo_acao', productActive: 'ativo' };
+const OFFER_API_FIELD = { offerTitle: 'titulo', offerSubtitle: 'subtitulo', offerDescription: 'descricao', offerImage: 'imagem_url', offerProduct: 'produto_id', offerLink: 'link', offerOrder: 'ordem', offerActive: 'ativo' };
 function value(id) { return document.getElementById(id).value; }
-function setValues(fields, data) { fields.forEach(id => { const key = id === 'productImage' ? 'imagem_url' : id === 'offerProduct' ? 'produto_id' : id.replace(/^product|^offer/, '').replace(/^[A-Z]/, letter => letter.toLowerCase()); if (data[key] !== undefined) document.getElementById(id).value = data[key] ?? ''; }); }
+function setValues(fields, data, apiFieldMap) { fields.forEach(id => { const key = apiFieldMap[id]; if (data[key] !== undefined) document.getElementById(id).value = data[key] ?? ''; }); }
 function clearForm(formId, fields, titleId, title) { document.getElementById(formId).reset(); document.getElementById(formId.replace('Form', 'Id')).value = ''; document.getElementById(titleId).textContent = title; fields.forEach(id => { if (id.endsWith('Active')) document.getElementById(id).value = 'true'; }); }
 
 async function loadProducts() {
-  const products = await api('/admin/produtos');
+  const cidadeQuery = cityFilter.value ? `?cidade=${encodeURIComponent(cityFilter.value)}` : '';
+  const products = await api(`/admin/produtos${cidadeQuery}`);
   updateCategoryOptions(products);
   updateOfferProductOptions(products);
   document.getElementById('productList').innerHTML = products.map(product => `
     <div class="admin-list__item"><img src="${product.imagem_url || '../assets/IMG-20260820-WA0128-removebg-preview.png'}" alt="">
-      <div class="admin-list__info"><strong>${product.nome}</strong><small>${Number(product.preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} · ${product.ativo ? 'visível' : 'oculto'}</small></div>
+      <div class="admin-list__info"><strong>${product.nome}</strong><small>${CIDADES[product.cidade] || 'sem cidade'} · ${Number(product.preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} · ${product.ativo ? 'visível' : 'oculto'}</small></div>
       <button type="button" data-edit-product="${product.id}">Editar</button>${isAdmin ? `<button type="button" data-delete-product="${product.id}">Excluir</button>` : ''}
     </div>`).join('');
   document.querySelectorAll('[data-edit-product]').forEach(button => button.onclick = () => editProduct(products.find(item => String(item.id) === button.dataset.editProduct)));
@@ -58,7 +85,7 @@ function updateOfferProductOptions(products) {
     products.map(product => `<option value="${product.id}">${product.nome}</option>`).join('');
   select.value = selected;
 }
-function editProduct(product) { document.getElementById('productId').value = product.id; setValues(productFields, product); document.getElementById('productFormTitle').textContent = 'Editar produto'; window.scrollTo({ top: 0, behavior: 'smooth' }); }
+function editProduct(product) { document.getElementById('productId').value = product.id; setValues(productFields, product, PRODUCT_API_FIELD); document.getElementById('productFormTitle').textContent = 'Editar produto'; window.scrollTo({ top: 0, behavior: 'smooth' }); }
 async function deleteProduct(id) { if (!confirm('Excluir este produto?')) return; try { await api(`/admin/produtos/${id}`, { method: 'DELETE' }); await loadProducts(); } catch (error) { alert(error.message); } }
 
 document.getElementById('productForm').onsubmit = async event => {
@@ -77,15 +104,23 @@ document.getElementById('productForm').onsubmit = async event => {
       imageGallery = uploadData.imagens;
       imageUrl = imageGallery[0];
     }
-    const payload = { nome: value('productName'), descricao: value('productDescription'), marca: value('productBrand'), categoria: value('productCategory'), preco: Number(value('productPrice')), estoque: Number(value('productStock')), imagem_url: imageUrl || null, imagens: imageGallery.length ? imageGallery : undefined, tipo_acao: value('productAction'), ativo: value('productActive') === 'true' };
+    const payload = { nome: value('productName'), descricao: value('productDescription'), marca: value('productBrand'), categoria: value('productCategory'), cidade: value('productCity'), preco: Number(value('productPrice')), estoque: Number(value('productStock')), imagem_url: imageUrl || null, imagens: imageGallery.length ? imageGallery : undefined, tipo_acao: value('productAction'), ativo: value('productActive') === 'true' };
     await api(id ? `/admin/produtos/${id}` : '/admin/produtos', { method: id ? 'PUT' : 'POST', body: JSON.stringify(payload) });
     document.getElementById('productMessage').textContent = 'Produto salvo.';
-    clearForm('productForm', productFields, 'productFormTitle', 'Adicionar produto');
+    resetProductForm();
     document.getElementById('productImageFile').value = '';
     await loadProducts();
   } catch (error) { document.getElementById('productMessage').textContent = error.message; }
 };
-document.getElementById('productCancel').onclick = () => clearForm('productForm', productFields, 'productFormTitle', 'Adicionar produto');
+// Depois de limpar o formulário, a cidade volta pra: a do login (se
+// restrito) ou a do filtro selecionado no topo (facilita cadastrar
+// vários produtos seguidos da mesma cidade).
+function resetProductForm() {
+  clearForm('productForm', productFields, 'productFormTitle', 'Adicionar produto');
+  if (adminCidade) productCitySelect.value = adminCidade;
+  else if (CIDADES[cityFilter.value]) productCitySelect.value = cityFilter.value;
+}
+document.getElementById('productCancel').onclick = resetProductForm;
 
 async function loadOffers() {
   const offers = await api('/admin/ofertas');
@@ -97,7 +132,7 @@ async function loadOffers() {
   document.querySelectorAll('[data-edit-offer]').forEach(button => button.onclick = () => editOffer(offers.find(item => String(item.id) === button.dataset.editOffer)));
   document.querySelectorAll('[data-delete-offer]').forEach(button => button.onclick = () => deleteOffer(button.dataset.deleteOffer));
 }
-function editOffer(offer) { document.getElementById('offerId').value = offer.id; setValues(offerFields, offer); document.getElementById('offerFormTitle').textContent = 'Editar oferta'; window.scrollTo({ top: 0, behavior: 'smooth' }); }
+function editOffer(offer) { document.getElementById('offerId').value = offer.id; setValues(offerFields, offer, OFFER_API_FIELD); document.getElementById('offerFormTitle').textContent = 'Editar oferta'; window.scrollTo({ top: 0, behavior: 'smooth' }); }
 async function deleteOffer(id) { if (!confirm('Excluir esta oferta?')) return; try { await api(`/admin/ofertas/${id}`, { method: 'DELETE' }); await loadOffers(); } catch (error) { alert(error.message); } }
 
 document.getElementById('offerForm').onsubmit = async event => {

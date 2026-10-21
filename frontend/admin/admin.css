@@ -19,6 +19,10 @@
 .admin-main { padding: 28px 0 50px; }
 .admin-main h1 { margin-bottom: 5px; }
 .admin-subtitle { margin-bottom: 22px; color: #56727d; }
+.admin-city-bar { background: #fff; border: 1px solid var(--admin-border); border-radius: 10px; padding: 16px 20px; margin-bottom: 18px; }
+.admin-city-bar label { display: grid; gap: 6px; font-weight: 700; font-size: .85rem; max-width: 320px; }
+.admin-city-bar select { border: 1px solid var(--admin-border); border-radius: 5px; padding: 9px; font: inherit; color: inherit; background: #fff; }
+.admin-city-bar .admin-hint { margin: 10px 0 0; }
 .admin-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
 .admin-card h2 { margin-bottom: 18px; font-size: 1.15rem; }
 .admin-form__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
