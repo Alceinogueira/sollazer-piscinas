@@ -209,23 +209,6 @@ body.city-gate-is-open { overflow: hidden; }
 .city-gate__btn:hover,
 .city-gate__btn:focus-visible { background: var(--brand-blue); border-color: var(--brand-blue); }
 
-/* Botão de trocar cidade, no header */
-.city-toggle {
-  background: none;
-  border: 1px solid var(--color-border);
-  border-radius: 20px;
-  padding: 7px 12px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--brand-navy);
-  cursor: pointer;
-  white-space: nowrap;
-}
-/* Tela bem estreita: mantém só o ícone, sem espremer os outros botões do header */
-@media (max-width: 420px) {
-  .city-toggle__label { display: none; }
-}
-
 /* ---------- Linha superior: Hero + Carrinho ---------- */
 .top-row {
   display: flex;
@@ -275,6 +258,9 @@ body.city-gate-is-open { overflow: hidden; }
   opacity: 1;
   visibility: visible;
 }
+/* Sem oferta cadastrada: bloco preto no lugar do banner (nada de
+   imagem escondida no código servindo de "padrão"). */
+.hero__slide--empty { background: #000; cursor: default; }
 .hero__overlay {
   position: absolute;
   inset: 0;

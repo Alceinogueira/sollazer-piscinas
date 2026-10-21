@@ -466,34 +466,22 @@ renderCart();
 
 // ---------------------------------------------------------
 // TELA DE SELEÇÃO DE CIDADE
-// Se o cliente já escolheu antes (localStorage), o script inline
-// no topo do <body> já escondeu a tela e a loja carrega direto.
-// Senão, só busca produtos depois que ele escolher uma cidade.
+// Aparece sempre, em toda visita/recarregamento. Depois de escolher,
+// não existe forma de trocar de cidade sem recarregar a página — de
+// propósito, a pedido do dono da loja.
 // ---------------------------------------------------------
 function initCityGate() {
   const gate = document.getElementById('cityGate');
-  const toggleLabel = document.getElementById('cityToggleLabel');
-
-  function atualizarRotuloCidade() {
-    toggleLabel.textContent = CIDADES[getCidade()] || 'Cidade';
-  }
 
   // Bloqueia o scroll da página por trás enquanto a tela de cidade
   // está aberta — além do clique já não vazar (elemento fixo cobrindo
   // tudo), evita qualquer rolagem por trás no celular.
-  function abrirGate() {
-    gate.hidden = false;
-    document.body.classList.add('city-gate-is-open');
-  }
-  function fecharGate() {
-    gate.hidden = true;
-    document.body.classList.remove('city-gate-is-open');
-  }
+  document.body.classList.add('city-gate-is-open');
 
   async function escolherCidade(cidade) {
     setCidade(cidade);
-    atualizarRotuloCidade();
-    fecharGate();
+    gate.hidden = true;
+    document.body.classList.remove('city-gate-is-open');
     await loadProducts();
     // Reaplica o filtro de categoria ativo (se houver) nos cards da cidade nova.
     const categoriaAtiva = document.querySelector('.products-filter__button.is-active')?.dataset.category;
@@ -504,12 +492,6 @@ function initCityGate() {
   gate.querySelectorAll('[data-cidade]').forEach(button => {
     button.addEventListener('click', () => escolherCidade(button.dataset.cidade));
   });
-  document.getElementById('cityToggle').addEventListener('click', abrirGate);
-
-  // A tela sempre começa aberta (não "lembra" a cidade de visitas
-  // anteriores, de propósito) — só trava o scroll pra combinar com isso.
-  atualizarRotuloCidade();
-  abrirGate();
 }
 
 initCityGate();
@@ -580,12 +562,13 @@ async function loadOffers() {
     }
     return;
   } catch (err) {
-    console.warn('Ofertas da API indisponíveis, usando carrossel padrão:', err.message);
+    // Sem oferta cadastrada: mostra um bloco preto no lugar do banner,
+    // só pra ficar claro que falta cadastrar uma imagem (em vez de
+    // mostrar uma promoção antiga/errada escondida no código).
+    console.warn('Nenhuma oferta cadastrada, mostrando banner vazio:', err.message);
     loadedOffers = [];
     document.getElementById('heroSlides').innerHTML = `
-      <article class="hero__slide is-active" data-slide="0">
-        <img src="assets/promo-genco-super-promo.webp" alt="Super Promo Genco - Cloro Granulado Múltipla Ação 10kg: Leve 1 por R$ 199,99 ou Leve 2 por R$ 389,99 à vista" fetchpriority="high">
-      </article>
+      <article class="hero__slide hero__slide--empty is-active" data-slide="0" aria-label="Nenhum banner cadastrado"></article>
     `;
     document.getElementById('heroDots').innerHTML = '';
   }
