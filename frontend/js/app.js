@@ -478,10 +478,22 @@ function initCityGate() {
     toggleLabel.textContent = CIDADES[getCidade()] || 'Cidade';
   }
 
+  // Bloqueia o scroll da página por trás enquanto a tela de cidade
+  // está aberta — além do clique já não vazar (elemento fixo cobrindo
+  // tudo), evita qualquer rolagem por trás no celular.
+  function abrirGate() {
+    gate.hidden = false;
+    document.body.classList.add('city-gate-is-open');
+  }
+  function fecharGate() {
+    gate.hidden = true;
+    document.body.classList.remove('city-gate-is-open');
+  }
+
   async function escolherCidade(cidade) {
     setCidade(cidade);
     atualizarRotuloCidade();
-    gate.hidden = true;
+    fecharGate();
     await loadProducts();
     // Reaplica o filtro de categoria ativo (se houver) nos cards da cidade nova.
     const categoriaAtiva = document.querySelector('.products-filter__button.is-active')?.dataset.category;
@@ -492,10 +504,12 @@ function initCityGate() {
   gate.querySelectorAll('[data-cidade]').forEach(button => {
     button.addEventListener('click', () => escolherCidade(button.dataset.cidade));
   });
-  document.getElementById('cityToggle').addEventListener('click', () => { gate.hidden = false; });
+  document.getElementById('cityToggle').addEventListener('click', abrirGate);
 
+  // A tela sempre começa aberta (não "lembra" a cidade de visitas
+  // anteriores, de propósito) — só trava o scroll pra combinar com isso.
   atualizarRotuloCidade();
-  if (gate.hidden) loadProducts(); // cidade já escolhida numa visita anterior
+  abrirGate();
 }
 
 initCityGate();

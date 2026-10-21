@@ -5,18 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sollazer Piscinas | Loja Oficial</title>
   <meta name="description" content="Sollazer Piscinas - Produtos de limpeza, manutenção e equipamentos para piscinas.">
-  <link rel="stylesheet" href="css/style.css?v=20261021-3">
+  <link rel="stylesheet" href="css/style.css?v=20261021-4">
 </head>
 <body>
 
   <!-- ===================== SELEÇÃO DE CIDADE ===================== -->
-  <!-- Tela cheia exibida antes da loja: cada cidade tem seu próprio
-       catálogo/preços (ver frontend/js/app.js — CIDADES). -->
+  <!-- Tela cheia exibida SEMPRE antes da loja, em toda visita/recarregamento
+       — de propósito, sem "lembrar" escolha anterior. Cada cidade tem seu
+       próprio catálogo/preços (ver frontend/js/app.js — CIDADES). -->
   <div class="city-gate" id="cityGate">
     <div class="city-gate__box">
       <img src="assets/IMG-20260820-WA0128-removebg-preview.png" alt="Sollazer Piscinas" class="city-gate__logo">
-      <h1>Escolha sua cidade</h1>
-      <p>Os produtos e preços são específicos de cada unidade Sollazer.</p>
+      <h1>Selecione sua cidade</h1>
+      <p>Para que a gente possa te atender melhor, com os produtos e preços certos da sua região, escolha abaixo a unidade Sollazer mais próxima de você.</p>
       <div class="city-gate__options">
         <button type="button" class="city-gate__btn" data-cidade="trancoso">Trancoso</button>
         <button type="button" class="city-gate__btn" data-cidade="eunapolis">Eunápolis</button>
@@ -24,19 +25,6 @@
       </div>
     </div>
   </div>
-  <!-- Evita o "flash" da tela de seleção pra quem já escolheu a cidade
-       antes: roda antes do resto da página pintar na tela. -->
-  <script>
-    (function () {
-      var cidades = ['trancoso', 'eunapolis', 'arraial_dajuda'];
-      var daUrl = new URLSearchParams(window.location.search).get('cidade');
-      var cidade = cidades.indexOf(daUrl) !== -1 ? daUrl : localStorage.getItem('sollazer_cidade');
-      if (cidades.indexOf(cidade) !== -1) {
-        localStorage.setItem('sollazer_cidade', cidade);
-        document.getElementById('cityGate').hidden = true;
-      }
-    })();
-  </script>
 
   <!-- ===================== HEADER ===================== -->
   <header class="header">
@@ -194,6 +182,6 @@
   </footer>
 
   <script src="js/config.js?v=20260903-1"></script>
-  <script src="js/app.js?v=20261021-2"></script>
+  <script src="js/app.js?v=20261021-3"></script>
 </body>
 </html>

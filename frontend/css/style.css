@@ -158,6 +158,7 @@ ul { list-style: none; }
 }
 .cart-backdrop.is-open { display: none !important; pointer-events: none; }
 body.modal-is-open { overflow: hidden; }
+body.city-gate-is-open { overflow: hidden; }
 
 /* ---------- Seleção de cidade (tela cheia antes da loja) ---------- */
 .city-gate {
