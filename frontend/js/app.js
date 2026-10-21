@@ -336,6 +336,22 @@ const WHATSAPP_POR_CIDADE = {
   arraial_dajuda: '5573999809030'
 };
 
+// Formata "5573999581664" -> "(73) 99958-1664" pra exibir no site.
+function formatarTelefone(numeroComPais) {
+  const numero = numeroComPais.replace(/^55/, '');
+  const ddd = numero.slice(0, 2);
+  const resto = numero.slice(2);
+  return `(${ddd}) ${resto.slice(0, 5)}-${resto.slice(5)}`;
+}
+
+// Mostra, na seção "Contato", o telefone da cidade escolhida.
+function atualizarTelefoneContato(cidade) {
+  const numero = WHATSAPP_POR_CIDADE[cidade];
+  if (!numero) return;
+  const el = document.getElementById('contactPhone');
+  if (el) el.textContent = formatarTelefone(numero);
+}
+
 function buildQuoteMessage(cart) {
   const items = cart.map((item, index) => {
     const subtotal = Number(item.preco || 0) * item.quantity;
@@ -480,6 +496,7 @@ function initCityGate() {
 
   async function escolherCidade(cidade) {
     setCidade(cidade);
+    atualizarTelefoneContato(cidade);
     gate.hidden = true;
     document.body.classList.remove('city-gate-is-open');
     await loadProducts();
