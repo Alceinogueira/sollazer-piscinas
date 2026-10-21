@@ -168,7 +168,11 @@ body.modal-is-open { overflow: hidden; }
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: radial-gradient(circle at 50% 20%, #0c2733 0%, #061822 55%, #030f17 100%);
+  /* Vidro fosco: dá pra ver a loja por trás, escurecida e embaçada —
+     em vez de uma cor sólida cobrindo tudo. */
+  background: rgba(3, 15, 23, .55);
+  backdrop-filter: blur(18px) saturate(130%);
+  -webkit-backdrop-filter: blur(18px) saturate(130%);
 }
 /* Sem a regra abaixo, o atributo "hidden" perde pro display:flex acima
    (mesma pegadinha que o .product-modal já evitava — ver [hidden] dele). */
@@ -187,14 +191,14 @@ body.modal-is-open { overflow: hidden; }
   padding: 10px 16px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
 }
-.city-gate__box h1 { font-size: 1.9rem; color: var(--color-white); margin-bottom: 10px; }
-.city-gate__box p { font-size: 0.95rem; color: #a9c2cd; margin-bottom: 34px; }
+.city-gate__box h1 { font-size: 1.9rem; color: var(--color-white); margin-bottom: 10px; text-shadow: 0 2px 12px rgba(0, 0, 0, .45); }
+.city-gate__box p { font-size: 0.95rem; color: #d7e6ec; margin-bottom: 34px; text-shadow: 0 1px 8px rgba(0, 0, 0, .4); }
 .city-gate__options { display: flex; flex-direction: column; gap: 14px; }
 .city-gate__btn {
   padding: 18px;
-  border: 1.5px solid rgba(255, 255, 255, .35);
+  border: 1.5px solid rgba(255, 255, 255, .45);
   border-radius: 10px;
-  background: rgba(255, 255, 255, .04);
+  background: rgba(6, 24, 34, .45);
   color: var(--color-white);
   font-weight: 700;
   font-size: 1.05rem;
