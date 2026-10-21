@@ -66,24 +66,4 @@ router.post(
   }
 );
 
-// ---------------------------------------------------------
-// Função auxiliar de exemplo para CADASTRAR um novo admin
-// (não exposta como rota pública por padrão — ative com cautela,
-// idealmente protegida por outra camada de autenticação/convite).
-// ---------------------------------------------------------
-async function criarAdminExemplo(nome, usuario, email, senhaPura, papel = 'admin') {
-  // VALIDAÇÃO DE SENHA FORTE deve acontecer aqui, por exemplo:
-  // - mínimo 8 caracteres
-  // - ao menos 1 letra maiúscula, 1 número e 1 símbolo
-  // Sugestão: usar a lib "zxcvbn" ou regex customizada antes do hash.
-  const SALT_ROUNDS = 12;
-  const senhaHash = await bcrypt.hash(senhaPura, SALT_ROUNDS);
-
-  await db.execute(
-    'INSERT INTO administradores (nome, usuario, email, senha_hash, papel) VALUES (?, ?, ?, ?, ?)',
-    [nome, usuario, email, senhaHash, papel]
-  );
-}
-
 module.exports = router;
-module.exports.criarAdminExemplo = criarAdminExemplo;
