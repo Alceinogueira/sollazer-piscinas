@@ -65,8 +65,7 @@ router.post(
     body('cidade').isIn(CIDADES_VALIDAS).withMessage('Escolha uma cidade válida.'),
     body('preco').isFloat({ min: 0 }).withMessage('Preço deve ser um número positivo.'),
     body('estoque').optional().isInt({ min: 0 }),
-    body('imagem_url').optional({ values: 'null' }).trim().isLength({ max: 255 }).custom(value => {
-      if (!value) return true;
+    body('imagem_url').trim().notEmpty().withMessage('A imagem do produto é obrigatória.').isLength({ max: 255 }).custom(value => {
       return value.startsWith('/') || /^https?:\/\//i.test(value);
     }).withMessage('Imagem deve ser um caminho local ou uma URL HTTP/HTTPS.'),
     body('imagens').optional({ values: 'null' }).isArray({ max: 8 }).custom(images => images.every(image => typeof image === 'string' && image.length <= 255 && (image.startsWith('/') || /^https?:\/\//i.test(image)))).withMessage('Galeria de imagens inválida.'),
@@ -112,8 +111,7 @@ router.put(
     body('cidade').isIn(CIDADES_VALIDAS).withMessage('Escolha uma cidade válida.'),
     body('preco').isFloat({ min: 0 }),
     body('estoque').optional().isInt({ min: 0 }),
-    body('imagem_url').optional({ values: 'null' }).trim().isLength({ max: 255 }).custom(value => {
-      if (!value) return true;
+    body('imagem_url').trim().notEmpty().withMessage('A imagem do produto é obrigatória.').isLength({ max: 255 }).custom(value => {
       return value.startsWith('/') || /^https?:\/\//i.test(value);
     }).withMessage('Imagem deve ser um caminho local ou uma URL HTTP/HTTPS.'),
     body('imagens').optional({ values: 'null' }).isArray({ max: 8 }).custom(images => images.every(image => typeof image === 'string' && image.length <= 255 && (image.startsWith('/') || /^https?:\/\//i.test(image)))).withMessage('Galeria de imagens inválida.'),

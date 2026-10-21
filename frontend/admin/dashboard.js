@@ -50,11 +50,11 @@ async function api(path, options = {}) {
   return data;
 }
 
-const productFields = ['productName', 'productDescription', 'productBrand', 'productCategory', 'productCity', 'productPrice', 'productStock', 'productImage', 'productAction', 'productActive'];
+const productFields = ['productName', 'productDescription', 'productBrand', 'productCategory', 'productCity', 'productPrice', 'productStock', 'productImage', 'productActive'];
 const offerFields = ['offerTitle', 'offerSubtitle', 'offerDescription', 'offerImage', 'offerProduct', 'offerLink', 'offerOrder', 'offerActive'];
 // Mapa explícito DOM-id -> campo da API (os nomes da API são em
 // português e não batem com um id em inglês "deduzido" por regex).
-const PRODUCT_API_FIELD = { productName: 'nome', productDescription: 'descricao', productBrand: 'marca', productCategory: 'categoria', productCity: 'cidade', productPrice: 'preco', productStock: 'estoque', productImage: 'imagem_url', productAction: 'tipo_acao', productActive: 'ativo' };
+const PRODUCT_API_FIELD = { productName: 'nome', productDescription: 'descricao', productBrand: 'marca', productCategory: 'categoria', productCity: 'cidade', productPrice: 'preco', productStock: 'estoque', productImage: 'imagem_url', productActive: 'ativo' };
 const OFFER_API_FIELD = { offerTitle: 'titulo', offerSubtitle: 'subtitulo', offerDescription: 'descricao', offerImage: 'imagem_url', offerProduct: 'produto_id', offerLink: 'link', offerOrder: 'ordem', offerActive: 'ativo' };
 function value(id) { return document.getElementById(id).value; }
 function setValues(fields, data, apiFieldMap) { fields.forEach(id => { const key = apiFieldMap[id]; if (data[key] !== undefined) document.getElementById(id).value = data[key] ?? ''; }); }
@@ -104,7 +104,10 @@ document.getElementById('productForm').onsubmit = async event => {
       imageGallery = uploadData.imagens;
       imageUrl = imageGallery[0];
     }
-    const payload = { nome: value('productName'), descricao: value('productDescription'), marca: value('productBrand'), categoria: value('productCategory'), cidade: value('productCity'), preco: Number(value('productPrice')), estoque: Number(value('productStock')), imagem_url: imageUrl || null, imagens: imageGallery.length ? imageGallery : undefined, tipo_acao: value('productAction'), ativo: value('productActive') === 'true' };
+    // "productImage" (hidden) só carrega a imagem atual ao editar sem
+    // trocar o arquivo. Produto novo sem nenhum upload: bloqueia aqui.
+    if (!imageUrl) throw new Error('Selecione pelo menos uma imagem do produto.');
+    const payload = { nome: value('productName'), descricao: value('productDescription'), marca: value('productBrand'), categoria: value('productCategory'), cidade: value('productCity'), preco: Number(value('productPrice')), estoque: Number(value('productStock')), imagem_url: imageUrl, imagens: imageGallery.length ? imageGallery : undefined, tipo_acao: 'carrinho', ativo: value('productActive') === 'true' };
     await api(id ? `/admin/produtos/${id}` : '/admin/produtos', { method: id ? 'PUT' : 'POST', body: JSON.stringify(payload) });
     document.getElementById('productMessage').textContent = 'Produto salvo.';
     resetProductForm();
@@ -150,7 +153,7 @@ document.getElementById('offerForm').onsubmit = async event => {
       if (!uploadResponse.ok) throw new Error(uploadData.erro || 'Não foi possível enviar a imagem.');
       imageUrl = uploadData.imagem_url;
     }
-    if (!imageUrl) throw new Error('Informe uma URL ou envie uma imagem da oferta.');
+    if (!imageUrl) throw new Error('Selecione uma imagem da oferta.');
     const produtoId = value('offerProduct');
     const payload = { titulo: value('offerTitle'), subtitulo: value('offerSubtitle'), descricao: value('offerDescription'), imagem_url: imageUrl, produto_id: produtoId ? Number(produtoId) : null, link: value('offerLink'), ordem: Number(value('offerOrder')), ativo: value('offerActive') === 'true' };
     await api(id ? `/admin/ofertas/${id}` : '/admin/ofertas', { method: id ? 'PUT' : 'POST', body: JSON.stringify(payload) });
