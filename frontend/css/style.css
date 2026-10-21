@@ -168,34 +168,41 @@ body.modal-is-open { overflow: hidden; }
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: linear-gradient(160deg, var(--brand-navy) 0%, var(--brand-wave-dark) 55%, var(--brand-blue) 100%);
+  background: radial-gradient(circle at 50% 20%, #0c2733 0%, #061822 55%, #030f17 100%);
 }
+/* Sem a regra abaixo, o atributo "hidden" perde pro display:flex acima
+   (mesma pegadinha que o .product-modal já evitava — ver [hidden] dele). */
+.city-gate[hidden] { display: none; }
 .city-gate__box {
   width: 100%;
-  max-width: 420px;
+  max-width: 480px;
   text-align: center;
-  background: var(--color-white);
-  border-radius: var(--radius);
-  padding: 36px 28px;
-  box-shadow: 0 20px 50px rgba(4, 25, 34, .35);
+  padding: 24px;
 }
-.city-gate__logo { width: 120px; margin-bottom: 18px; }
-.city-gate__box h1 { font-size: 1.3rem; color: var(--brand-navy); margin-bottom: 6px; }
-.city-gate__box p { font-size: 0.85rem; color: #5b6870; margin-bottom: 22px; }
-.city-gate__options { display: flex; flex-direction: column; gap: 10px; }
-.city-gate__btn {
-  padding: 14px;
-  border: 1.5px solid var(--brand-blue);
-  border-radius: 8px;
+.city-gate__logo {
+  width: 150px;
+  margin-bottom: 26px;
   background: var(--color-white);
-  color: var(--brand-navy);
+  border-radius: 12px;
+  padding: 10px 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
+}
+.city-gate__box h1 { font-size: 1.9rem; color: var(--color-white); margin-bottom: 10px; }
+.city-gate__box p { font-size: 0.95rem; color: #a9c2cd; margin-bottom: 34px; }
+.city-gate__options { display: flex; flex-direction: column; gap: 14px; }
+.city-gate__btn {
+  padding: 18px;
+  border: 1.5px solid rgba(255, 255, 255, .35);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .04);
+  color: var(--color-white);
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   cursor: pointer;
-  transition: background .15s ease, color .15s ease;
+  transition: background .15s ease, border-color .15s ease;
 }
 .city-gate__btn:hover,
-.city-gate__btn:focus-visible { background: var(--brand-blue); color: var(--color-white); }
+.city-gate__btn:focus-visible { background: var(--brand-blue); border-color: var(--brand-blue); }
 
 /* Botão de trocar cidade, no header */
 .city-toggle {

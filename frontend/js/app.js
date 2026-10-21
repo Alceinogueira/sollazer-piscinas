@@ -328,11 +328,11 @@ function getMockProducts() {
 // ---------------------------------------------------------
 // AÇÃO DO CARRINHO (orçamento)
 // ---------------------------------------------------------
-// Número de WhatsApp de cada unidade — TODO: confirmar os números reais de
-// Eunápolis e Arraial D'Ajuda (por enquanto os três usam o mesmo).
+// Número de WhatsApp de cada unidade — TODO: confirmar o número real de
+// Arraial D'Ajuda (por enquanto usa o número original da loja).
 const WHATSAPP_POR_CIDADE = {
-  trancoso: '5573999809030',
-  eunapolis: '5573999809030',
+  trancoso: '5573999581664',
+  eunapolis: '5573988267633',
   arraial_dajuda: '5573999809030'
 };
 
