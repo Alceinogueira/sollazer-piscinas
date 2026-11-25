@@ -11,6 +11,44 @@ const jwt = require('jsonwebtoken');
 const db = require('../config/db');
 const { body, validationResult } = require('express-validator');
 
+// ---------------------------------------------------------
+// LIMITE DE TENTATIVAS
+// Depois de 5 senhas erradas para o mesmo usuário a partir do mesmo
+// IP, bloqueia por 15 minutos — impede ficar testando senhas sem parar.
+// A chave junta IP + usuário pra um funcionário errando a senha no
+// Wi-Fi da loja não travar o login dos colegas. Fica em memória:
+// reiniciar o backend zera os contadores (aceitável aqui).
+// ---------------------------------------------------------
+const MAX_TENTATIVAS = 5;
+const JANELA_MS = 15 * 60 * 1000;
+const tentativas = new Map(); // chave -> { falhas, desde }
+
+function chaveTentativa(req) {
+  return `${req.ip}|${String(req.body.usuario || '').trim().toLowerCase()}`;
+}
+
+function bloqueado(chave) {
+  const registro = tentativas.get(chave);
+  if (!registro) return false;
+  if (Date.now() - registro.desde > JANELA_MS) {
+    tentativas.delete(chave);
+    return false;
+  }
+  return registro.falhas >= MAX_TENTATIVAS;
+}
+
+function registrarFalha(chave) {
+  const registro = tentativas.get(chave);
+  if (!registro || Date.now() - registro.desde > JANELA_MS) tentativas.set(chave, { falhas: 1, desde: Date.now() });
+  else registro.falhas += 1;
+}
+
+// Limpa registros vencidos de vez em quando pra o Map não crescer sem fim.
+setInterval(() => {
+  const agora = Date.now();
+  for (const [chave, registro] of tentativas) if (agora - registro.desde > JANELA_MS) tentativas.delete(chave);
+}, JANELA_MS).unref();
+
 // POST /api/auth/login
 router.post(
   '/login',
@@ -28,6 +66,10 @@ router.post(
     }
 
     const { usuario, senha } = req.body;
+    const chave = chaveTentativa(req);
+    if (bloqueado(chave)) {
+      return res.status(429).json({ erro: 'Muitas tentativas de acesso. Aguarde 15 minutos e tente de novo.' });
+    }
 
     try {
       // Query preparada — protege contra SQL Injection no campo e-mail.
@@ -37,6 +79,7 @@ router.post(
       );
 
       if (rows.length === 0) {
+        registrarFalha(chave);
         // Mensagem genérica de propósito: não revela se o e-mail existe ou não.
         return res.status(401).json({ erro: 'Credenciais inválidas.' });
       }
@@ -46,8 +89,11 @@ router.post(
       // Compara a senha enviada com o HASH salvo no banco (nunca comparar texto puro).
       const senhaValida = await bcrypt.compare(senha, admin.senha_hash);
       if (!senhaValida) {
+        registrarFalha(chave);
         return res.status(401).json({ erro: 'Credenciais inválidas.' });
       }
+
+      tentativas.delete(chave);
 
       // Gera o token JWT que o painel deve enviar em "Authorization: Bearer <token>".
       // "cidade" vai no token pra o backend sempre confiar nela (nunca no

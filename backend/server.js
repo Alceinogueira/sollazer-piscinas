@@ -30,6 +30,10 @@ const app = express();
 // ---------------------------------------------------------
 // Middlewares globais
 // ---------------------------------------------------------
+// Em produção o pedido passa por Traefik -> nginx -> backend. Confiar
+// nesses 2 proxies faz o req.ip ser o IP real do cliente (usado no
+// limite de tentativas de login), sem aceitar X-Forwarded-For forjado.
+app.set('trust proxy', 2);
 app.use(cors()); // Em produção, restrinja para o domínio real do frontend:
                   // app.use(cors({ origin: 'https://www.sollazerpiscinas.com.br' }));
 app.use(express.json()); // parseia JSON no body das requisições

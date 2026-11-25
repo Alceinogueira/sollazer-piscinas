@@ -1,8 +1,7 @@
 const API_BASE_URL = window.SOLLAZER_API_BASE_URL || 'http://localhost:3000/api';
 
-if (localStorage.getItem('sollazer_admin_token')) {
-  window.location.href = 'dashboard.html';
-}
+// Já tem sessão válida nesta aba: vai direto pro painel.
+if (sessaoAtiva()) window.location.replace('dashboard.html');
 
 document.getElementById('loginForm').addEventListener('submit', async event => {
   event.preventDefault();
@@ -20,16 +19,8 @@ document.getElementById('loginForm').addEventListener('submit', async event => {
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.erro || 'Não foi possível entrar.');
-    localStorage.setItem('sollazer_admin_token', data.token);
-    localStorage.setItem('sollazer_admin_name', data.admin.nome);
-    localStorage.setItem('sollazer_admin_role', data.admin.papel || 'funcionario');
-    // "cidade" vazia = esse login enxerga/gerencia todas as cidades.
-    if (data.admin.cidade) {
-      localStorage.setItem('sollazer_admin_cidade', data.admin.cidade);
-    } else {
-      localStorage.removeItem('sollazer_admin_cidade');
-    }
-    window.location.href = 'dashboard.html';
+    salvarSessao(data.token, data.admin);
+    window.location.replace('dashboard.html');
   } catch (error) {
     message.textContent = error.message;
   }

@@ -1,11 +1,11 @@
 const API_BASE_URL = window.SOLLAZER_API_BASE_URL || 'http://localhost:3000/api';
-const token = localStorage.getItem('sollazer_admin_token');
-if (!token) window.location.href = 'login.html';
-const isAdmin = localStorage.getItem('sollazer_admin_role') === 'admin';
+// Sem sessão o <head> do dashboard.html já mandou pro login.
+const token = sessaoAtiva();
+const isAdmin = lerSessao('sollazer_admin_role') === 'admin';
 // Vazio = esse login enxerga/gerencia o catálogo de todas as cidades.
-const adminCidade = localStorage.getItem('sollazer_admin_cidade') || '';
+const adminCidade = lerSessao('sollazer_admin_cidade') || '';
 const CIDADES = { trancoso: 'Trancoso', eunapolis: 'Eunápolis', arraial_dajuda: "Arraial D'Ajuda" };
-document.getElementById('adminName').textContent = localStorage.getItem('sollazer_admin_name') || 'funcionário';
+document.getElementById('adminName').textContent = lerSessao('sollazer_admin_name') || 'funcionário';
 
 // Ofertas do carrossel e exclusão de produto são exclusivas do admin (dono da loja).
 // Funcionário só cria/edita produto e altera preço.
@@ -31,9 +31,8 @@ cityFilter.addEventListener('change', () => {
 });
 
 document.getElementById('logoutButton').onclick = () => {
-  localStorage.removeItem('sollazer_admin_token');
-  localStorage.removeItem('sollazer_admin_name');
-  window.location.href = 'login.html';
+  encerrarSessao();
+  window.location.replace('login.html');
 };
 
 async function api(path, options = {}) {
@@ -43,8 +42,11 @@ async function api(path, options = {}) {
   });
   const data = await response.json().catch(() => ({}));
   if (response.status === 401) {
-    localStorage.removeItem('sollazer_admin_token');
-    window.location.href = 'login.html';
+    encerrarSessao();
+    window.location.replace('login.html');
+    // Nunca resolve: a página já está indo pro login, não adianta
+    // mostrar o painel nem mensagem de erro no meio do caminho.
+    return new Promise(() => {});
   }
   if (!response.ok) throw new Error(data.erro || data.erros?.[0]?.msg || 'Não foi possível concluir a operação.');
   return data;
@@ -60,19 +62,54 @@ function value(id) { return document.getElementById(id).value; }
 function setValues(fields, data, apiFieldMap) { fields.forEach(id => { const key = apiFieldMap[id]; if (data[key] !== undefined) document.getElementById(id).value = data[key] ?? ''; }); }
 function clearForm(formId, fields, titleId, title) { document.getElementById(formId).reset(); document.getElementById(formId.replace('Form', 'Id')).value = ''; document.getElementById(titleId).textContent = title; fields.forEach(id => { if (id.endsWith('Active')) document.getElementById(id).value = 'true'; }); }
 
+// ---------------------------------------------------------
+// LISTA DE PRODUTOS POR CATEGORIA
+// Mesmos grupos e mesma ordem da vitrine (js/vitrine.js), com
+// filtro e busca pra achar rápido o produto e trocar foto/preço.
+// ---------------------------------------------------------
+const productGroupFilter = document.getElementById('productGroupFilter');
+const productSearch = document.getElementById('productSearch');
+let allProducts = [];
+
 async function loadProducts() {
   const cidadeQuery = cityFilter.value ? `?cidade=${encodeURIComponent(cityFilter.value)}` : '';
-  const products = await api(`/admin/produtos${cidadeQuery}`);
-  updateCategoryOptions(products);
-  updateOfferProductOptions(products);
-  document.getElementById('productList').innerHTML = products.map(product => `
+  allProducts = ordenarVitrine(await api(`/admin/produtos${cidadeQuery}`));
+  updateCategoryOptions(allProducts);
+  updateOfferProductOptions(allProducts);
+  updateGroupFilterOptions(allProducts);
+  renderProductList();
+}
+function updateGroupFilterOptions(products) {
+  const selected = productGroupFilter.value;
+  const groups = [...new Set(products.map(product => grupoVitrine(product).nome))];
+  productGroupFilter.innerHTML = '<option value="">Todas as categorias</option>' +
+    groups.map(group => `<option value="${group}">${group}</option>`).join('');
+  productGroupFilter.value = groups.includes(selected) ? selected : '';
+}
+function renderProductList() {
+  const group = productGroupFilter.value;
+  const search = normalizarTexto(productSearch.value).trim();
+  const products = allProducts.filter(product =>
+    (!group || grupoVitrine(product).nome === group) && (!search || normalizarTexto(product.nome).includes(search)));
+  const counts = {};
+  products.forEach(product => { const name = grupoVitrine(product).nome; counts[name] = (counts[name] || 0) + 1; });
+  let currentGroup = null;
+  document.getElementById('productList').innerHTML = products.map(product => {
+    const productGroup = grupoVitrine(product).nome;
+    const heading = productGroup !== currentGroup ? `<h3 class="admin-list__group">${productGroup} <span>${counts[productGroup]}</span></h3>` : '';
+    currentGroup = productGroup;
+    return `${heading}
     <div class="admin-list__item"><img src="${product.imagem_url || '../assets/IMG-20260820-WA0128-removebg-preview.png'}" alt="">
       <div class="admin-list__info"><strong>${product.nome}</strong><small>${CIDADES[product.cidade] || 'sem cidade'} · ${Number(product.preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} · ${product.ativo ? 'visível' : 'oculto'}</small></div>
       <button type="button" data-edit-product="${product.id}">Editar</button>${isAdmin ? `<button type="button" data-delete-product="${product.id}">Excluir</button>` : ''}
-    </div>`).join('');
-  document.querySelectorAll('[data-edit-product]').forEach(button => button.onclick = () => editProduct(products.find(item => String(item.id) === button.dataset.editProduct)));
+    </div>`;
+  }).join('') || '<p class="admin-hint">Nenhum produto encontrado.</p>';
+  document.querySelectorAll('[data-edit-product]').forEach(button => button.onclick = () => editProduct(allProducts.find(item => String(item.id) === button.dataset.editProduct)));
   document.querySelectorAll('[data-delete-product]').forEach(button => button.onclick = () => deleteProduct(button.dataset.deleteProduct));
 }
+productGroupFilter.addEventListener('change', renderProductList);
+productSearch.addEventListener('input', renderProductList);
+
 function updateCategoryOptions(products) {
   const defaults = ['Cloros', 'Bombas e Filtros', 'Produtos Químicos', 'Diversos'];
   const categories = [...new Set([...defaults, ...products.map(product => product.categoria).filter(Boolean)])].sort((first, second) => first.localeCompare(second, 'pt-BR'));
@@ -85,7 +122,19 @@ function updateOfferProductOptions(products) {
     products.map(product => `<option value="${product.id}">${product.nome}</option>`).join('');
   select.value = selected;
 }
-function editProduct(product) { document.getElementById('productId').value = product.id; setValues(productFields, product, PRODUCT_API_FIELD); document.getElementById('productFormTitle').textContent = 'Editar produto'; window.scrollTo({ top: 0, behavior: 'smooth' }); }
+function editProduct(product) { document.getElementById('productId').value = product.id; setValues(productFields, product, PRODUCT_API_FIELD); showProductImagePreview(product.imagem_url, true); document.getElementById('productFormTitle').textContent = 'Editar produto'; document.getElementById('productForm').scrollIntoView({ behavior: 'smooth' }); }
+// Mostra a foto atual ao editar (e a nova, assim que um arquivo é escolhido).
+function showProductImagePreview(src, isCurrent) {
+  const preview = document.getElementById('productImagePreview');
+  preview.hidden = !src;
+  if (src) preview.src = src;
+  document.getElementById('productImageHint').hidden = !(src && isCurrent);
+}
+document.getElementById('productImageFile').addEventListener('change', event => {
+  const file = event.target.files[0];
+  if (file) showProductImagePreview(URL.createObjectURL(file), false);
+  else showProductImagePreview(value('productImage'), true);
+});
 async function deleteProduct(id) { if (!confirm('Excluir este produto?')) return; try { await api(`/admin/produtos/${id}`, { method: 'DELETE' }); await loadProducts(); } catch (error) { alert(error.message); } }
 
 document.getElementById('productForm').onsubmit = async event => {
@@ -120,6 +169,7 @@ document.getElementById('productForm').onsubmit = async event => {
 // vários produtos seguidos da mesma cidade).
 function resetProductForm() {
   clearForm('productForm', productFields, 'productFormTitle', 'Adicionar produto');
+  showProductImagePreview('', false);
   if (adminCidade) productCitySelect.value = adminCidade;
   else if (CIDADES[cityFilter.value]) productCitySelect.value = cityFilter.value;
 }
@@ -164,4 +214,9 @@ document.getElementById('offerForm').onsubmit = async event => {
 };
 document.getElementById('offerCancel').onclick = () => clearForm('offerForm', offerFields, 'offerFormTitle', 'Adicionar oferta ao carrossel');
 
-Promise.all([loadProducts(), isAdmin ? loadOffers() : Promise.resolve()]).catch(error => { document.getElementById('productMessage').textContent = error.message; });
+// Só mostra o painel depois da primeira resposta do backend: se o login
+// não valer mais, api() já mandou pro login e a tela nunca aparece.
+function revealPanel() { document.documentElement.classList.remove('auth-pending'); }
+Promise.all([loadProducts(), isAdmin ? loadOffers() : Promise.resolve()])
+  .then(revealPanel)
+  .catch(error => { revealPanel(); document.getElementById('productMessage').textContent = error.message; });

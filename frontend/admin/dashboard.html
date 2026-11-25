@@ -1,11 +1,16 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="auth-pending">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Painel do funcionário | Sollazer Piscinas</title>
   <link rel="stylesheet" href="../css/style.css?v=20261021-1">
-  <link rel="stylesheet" href="admin.css?v=20261021-1">
+  <link rel="stylesheet" href="admin.css?v=20261124-1">
+  <!-- O painel começa escondido (classe auth-pending) e só aparece
+       depois que o backend aceita o login — sem sessão, vai direto
+       pro login sem mostrar nada do painel. -->
+  <script src="sessao.js?v=20261124-1"></script>
+  <script>if (!sessaoAtiva()) window.location.replace('login.html');</script>
 </head>
 <body class="admin-page">
   <header class="admin-header"><div class="admin-header__inner">
@@ -45,12 +50,20 @@
             <label>Marca<input id="productBrand" maxlength="80"></label>
             <label>Categoria<input id="productCategory" list="productCategories" maxlength="80" placeholder="Pesquise ou crie uma categoria"><datalist id="productCategories"></datalist></label>
             <input id="productImage" type="hidden">
-            <label class="full">Imagem (obrigatório)<input id="productImageFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple></label>
+            <div class="full admin-image-field">
+              <img id="productImagePreview" class="admin-image-preview" alt="Foto do produto" hidden>
+              <label>Imagem (obrigatório)<input id="productImageFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple></label>
+              <p class="admin-hint" id="productImageHint" hidden>Esta é a foto atual. Para trocar, escolha um novo arquivo; para manter, deixe em branco.</p>
+            </div>
             <label>Visível<select id="productActive"><option value="true">Sim</option><option value="false">Não</option></select></label>
           </div>
           <div class="admin-form__actions"><button class="admin-button" type="submit">Salvar produto</button><button class="admin-button secondary" id="productCancel" type="button">Limpar</button></div>
           <p class="admin-message" id="productMessage" role="alert"></p>
         </form>
+        <div class="admin-list-tools">
+          <label>Categoria<select id="productGroupFilter"><option value="">Todas as categorias</option></select></label>
+          <label>Buscar<input id="productSearch" type="search" placeholder="Nome do produto"></label>
+        </div>
         <div class="admin-list" id="productList"></div>
       </section>
       <section class="admin-card" id="offersSection">
@@ -77,6 +90,7 @@
     </div>
   </main>
   <script src="../js/config.js?v=20260903-1"></script>
-  <script src="dashboard.js?v=20261021-2"></script>
+  <script src="../js/vitrine.js?v=20261124-1"></script>
+  <script src="dashboard.js?v=20261124-1"></script>
 </body>
 </html>

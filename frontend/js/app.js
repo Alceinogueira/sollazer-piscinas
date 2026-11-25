@@ -201,7 +201,7 @@ async function loadProducts() {
     if (!response.ok) throw new Error('Falha ao buscar produtos');
     const produtos = await response.json();
 
-    loadedProducts = ordenarMaisVendidos(produtos);
+    loadedProducts = ordenarVitrine(produtos); // ordem dos mais vendidos: js/vitrine.js
     grid.innerHTML = '';
     loadedProducts.forEach(produto => grid.appendChild(buildProductCard(produto)));
 
@@ -212,31 +212,6 @@ async function loadProducts() {
     grid.innerHTML = '';
     loadedProducts.forEach(produto => grid.appendChild(buildProductCard(produto)));
   }
-}
-
-// ---------------------------------------------------------
-// MAIS VENDIDOS NO TOPO
-// A pedido do dono da loja, a vitrine abre com os itens que mais
-// saem, nesta ordem: cloros, clarificantes, algicidas, barrilhas
-// e pH Certo. O resto vem depois, na ordem que a API mandou.
-// ---------------------------------------------------------
-function prioridadeMaisVendidos(produto) {
-  const nome = normalizarTexto(produto.nome);
-  if (getProductCategory(produto.categoria) === 'Cloros') return 0;
-  if (nome.includes('clarific') || nome.includes('floc')) return 1;
-  if (nome.includes('algicida')) return 2;
-  if (nome.includes('barrilha')) return 3;
-  if (nome.includes('ph certo')) return 4;
-  return 5;
-}
-
-function normalizarTexto(texto) {
-  return (texto || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-}
-
-function ordenarMaisVendidos(produtos) {
-  // sort() é estável: dentro de cada grupo a ordem original é mantida.
-  return [...produtos].sort((a, b) => prioridadeMaisVendidos(a) - prioridadeMaisVendidos(b));
 }
 
 function buildProductCard(produto) {
@@ -331,15 +306,6 @@ function changeProductImage(direction) {
 function closeProductModal() {
   document.getElementById('productModal').hidden = true;
   document.body.classList.remove('modal-is-open');
-}
-
-function getProductCategory(category) {
-  const normalized = (category || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
-  if (normalized === 'cloro' || normalized === 'cloros') return 'Cloros';
-  if (normalized.includes('bomba') || normalized.includes('filtro')) return 'Bombas e Filtros';
-  if (normalized.includes('quimic')) return 'Produtos Químicos';
-  if (!normalized) return 'Diversos';
-  return category.trim();
 }
 
 // Dados de exemplo — usados apenas se a API não responder (ambiente de dev/preview)
