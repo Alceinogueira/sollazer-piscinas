@@ -28,7 +28,7 @@ function temPeso(nome, kg) {
 // (ex.: o "Ultra Clear", algicida + clarificante, fica em Clarificantes).
 // O que não bate em nenhum vem depois, agrupado pela categoria do cadastro.
 const GRUPOS_VITRINE = [
-  { nome: 'Baldes de Cloro 10kg', bate: (p, nome) => p.cloro && temPeso(nome, 10) },
+  { nome: 'Baldes de Cloro 10kg', bate: (p, nome) => p.cloro && (temPeso(nome, 10) || nome.includes('hidroall max 60')) },
   { nome: 'Baldes de Cloro 50kg', bate: (p, nome) => p.cloro && temPeso(nome, 50) },
   { nome: 'Clarificantes', bate: (p, nome) => nome.includes('clarific') || nome.includes('floc') },
   { nome: 'Algicidas de Choque', bate: (p, nome) => nome.includes('algicida') && nome.includes('choque') },
