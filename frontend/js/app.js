@@ -71,7 +71,70 @@ function addToCart(product, quantity) {
     });
   }
   saveCart(cart);
-  openCart();
+}
+
+// ---------------------------------------------------------
+// ADIÇÃO RÁPIDA
+// Antes do 1º produto, tocar no card abre os detalhes. Depois que o
+// carrinho tem algo, tocar no card já adiciona — o cliente vai
+// escolhendo sem precisar abrir e fechar o carrinho a cada item.
+// ---------------------------------------------------------
+let ultimoAdicionado = null; // pra "Desfazer" um toque sem querer
+let toastTimer;
+
+function adicionarComAviso(produto, quantity) {
+  const eraPrimeiro = getCart().length === 0;
+  addToCart(produto, quantity);
+  ultimoAdicionado = { id: produto.id, quantity };
+  mostrarAvisoCarrinho(produto, quantity, eraPrimeiro);
+  const card = document.querySelector(`.product-card[data-id="${produto.id}"]`);
+  if (card) {
+    card.classList.remove('is-added');
+    void card.offsetWidth; // reinicia a animação se tocar duas vezes seguidas
+    card.classList.add('is-added');
+  }
+}
+
+function mostrarAvisoCarrinho(produto, quantity, eraPrimeiro) {
+  const toast = document.getElementById('cartToast');
+  clearTimeout(toastTimer);
+  toast.classList.toggle('is-first', eraPrimeiro);
+  document.getElementById('cartToastText').textContent = eraPrimeiro
+    ? `✓ ${produto.nome} foi para o carrinho. Agora é só tocar nos outros produtos para ir adicionando.`
+    : `✓ ${quantity > 1 ? `${quantity}x ` : ''}${produto.nome} adicionado.`;
+  document.getElementById('cartToastUndo').hidden = eraPrimeiro;
+  document.getElementById('cartToastContinue').hidden = !eraPrimeiro;
+  toast.hidden = false;
+  // O 1º fica até o cliente escolher; os seguintes somem sozinhos.
+  if (!eraPrimeiro) toastTimer = setTimeout(esconderAvisoCarrinho, 3500);
+}
+
+function esconderAvisoCarrinho() {
+  clearTimeout(toastTimer);
+  document.getElementById('cartToast').hidden = true;
+}
+
+document.getElementById('cartToastContinue').addEventListener('click', esconderAvisoCarrinho);
+document.getElementById('cartToastFinish').addEventListener('click', () => { esconderAvisoCarrinho(); openCart(); });
+document.getElementById('cartToastUndo').addEventListener('click', () => {
+  if (ultimoAdicionado) {
+    const item = getCart().find(i => String(i.id) === String(ultimoAdicionado.id));
+    if (item) updateCartQuantity(item.id, item.quantity - ultimoAdicionado.quantity);
+    ultimoAdicionado = null;
+  }
+  esconderAvisoCarrinho();
+});
+
+// Selo "✓ 2" nos cards que já estão no carrinho + dica acima da grade.
+function atualizarCardsNoCarrinho() {
+  const cart = getCart();
+  document.getElementById('quickAddHint').hidden = cart.length === 0;
+  document.querySelectorAll('.product-card[data-id]').forEach(card => {
+    const item = cart.find(i => String(i.id) === card.dataset.id);
+    const badge = card.querySelector('.product-card__in-cart');
+    badge.hidden = !item;
+    if (item) badge.textContent = `✓ ${item.quantity}`;
+  });
 }
 
 function removeFromCart(productId) {
@@ -180,6 +243,8 @@ function renderCart() {
     countEl.textContent = '0';
     document.getElementById('cartPayment').hidden = true;
     document.getElementById('cartDiscountRow').hidden = true;
+    atualizarCardsNoCarrinho();
+    atualizarBarraCelular(0, 0);
     return;
   }
 
@@ -214,6 +279,8 @@ function renderCart() {
   totalEl.textContent = formatBRL(totais.total);
   countEl.textContent = String(totalItems);
   renderPagamento(totais);
+  atualizarCardsNoCarrinho();
+  atualizarBarraCelular(totalItems, totais.total);
 
   // Liga os eventos de remover e editar quantidade em cada item criado dinamicamente
   cartItemsEl.querySelectorAll('.cart-item__remove').forEach(btn => {
@@ -260,6 +327,7 @@ async function loadProducts() {
     removerDoCarrinhoIndisponiveis(produtos);
     grid.innerHTML = '';
     loadedProducts.forEach(produto => grid.appendChild(buildProductCard(produto)));
+    atualizarCardsNoCarrinho();
 
   } catch (err) {
     // Fallback: caso a API ainda não esteja rodando, mostra produtos de exemplo
@@ -267,6 +335,7 @@ async function loadProducts() {
     loadedProducts = getMockProducts();
     grid.innerHTML = '';
     loadedProducts.forEach(produto => grid.appendChild(buildProductCard(produto)));
+    atualizarCardsNoCarrinho();
   }
 }
 
@@ -282,6 +351,7 @@ function removerDoCarrinhoIndisponiveis(produtos) {
 function buildProductCard(produto) {
   const card = document.createElement('article');
   card.className = 'product-card';
+  card.dataset.id = produto.id;
   card.dataset.category = getProductCategory(produto.categoria);
 
   const actionLabel = produto.tipo_acao === 'orcamento' ? 'Solicitar Orçamento' : 'Adicionar ao Carrinho';
@@ -289,6 +359,7 @@ function buildProductCard(produto) {
 
   card.innerHTML = `
     <img class="product-card__img" src="${produto.imagem}" alt="${produto.nome}">
+    <span class="product-card__in-cart" aria-label="Quantidade no carrinho" hidden></span>
     <div class="product-card__body">
       <h3 class="product-card__title">${produto.nome}</h3>
       <p class="product-card__desc">${produto.descricao || 'Produto para sua piscina.'}</p>
@@ -302,6 +373,7 @@ function buildProductCard(produto) {
       </div>
       <div class="product-card__actions">
         <button type="button" class="product-card__btn ${actionClass}">${actionLabel}</button>
+        <button type="button" class="product-card__details">Ver detalhes</button>
       </div>
     </div>
   `;
@@ -318,14 +390,21 @@ function buildProductCard(produto) {
     qtyInput.value = parseInt(qtyInput.value, 10) + 1;
   });
 
-  card.querySelector('.product-card__btn').addEventListener('click', () => {
-    const quantity = parseInt(qtyInput.value, 10);
-    addToCart(produto, quantity);
-  });
+  // Adiciona a quantidade escolhida no seletor e volta ele pra 1.
+  function adicionarDoCard() {
+    adicionarComAviso(produto, parseInt(qtyInput.value, 10) || 1);
+    qtyInput.value = 1;
+  }
+
+  card.querySelector('.product-card__btn').addEventListener('click', adicionarDoCard);
+  card.querySelector('.product-card__details').addEventListener('click', () => openProductModal(produto));
 
   card.addEventListener('click', event => {
     if (event.target.closest('button, input')) return;
-    openProductModal(produto);
+    // Carrinho vazio: mostra os detalhes primeiro. Já escolheu algo:
+    // tocar no produto adiciona direto (adição rápida).
+    if (getCart().length === 0) openProductModal(produto);
+    else adicionarDoCard();
   });
 
   return card;
@@ -334,7 +413,10 @@ function buildProductCard(produto) {
 let currentProductImages = [];
 let currentProductImageIndex = 0;
 
+let produtoNoModal = null;
+
 function openProductModal(produto) {
+  produtoNoModal = produto;
   currentProductImages = (Array.isArray(produto.imagens) && produto.imagens.length ? produto.imagens : [produto.imagem]).filter(Boolean);
   if (!currentProductImages.length) currentProductImages = ['assets/IMG-20260820-WA0128-removebg-preview.png'];
   currentProductImageIndex = 0;
@@ -474,7 +556,19 @@ async function handleQuoteRequest() {
 document.getElementById('quoteBtn').addEventListener('click', handleQuoteRequest);
 
 // Botão da barra fixa exibida apenas no mobile
-document.getElementById('mobileQuoteBtn').addEventListener('click', handleQuoteRequest);
+// No celular a barra mostra o resumo e abre o carrinho (onde o cliente
+// escolhe a forma de pagamento e envia o pedido).
+document.getElementById('mobileQuoteBtn').addEventListener('click', () => {
+  if (getCart().length === 0) return alert('Toque em um produto para ver os detalhes e adicionar ao carrinho.');
+  esconderAvisoCarrinho();
+  openCart();
+});
+
+function atualizarBarraCelular(totalItems, total) {
+  document.getElementById('mobileQuoteBtn').textContent = totalItems
+    ? `Finalizar pedido · ${totalItems} ${totalItems === 1 ? 'item' : 'itens'} · ${formatBRL(total)}`
+    : '[SOLICITAR ORÇAMENTO]';
+}
 
 // ---------------------------------------------------------
 // MENU HAMBÚRGUER (mobile)
@@ -498,7 +592,14 @@ const cartToggle = document.getElementById('cartToggle');
 const cartCloseBtn = document.getElementById('cartCloseBtn');
 const cartBackdrop = document.getElementById('cartBackdrop');
 
+document.getElementById('productModalAdd').addEventListener('click', () => {
+  if (!produtoNoModal) return;
+  closeProductModal();
+  adicionarComAviso(produtoNoModal, 1);
+});
+
 function openCart() {
+  esconderAvisoCarrinho();
   renderCart();
   cartSidebar.classList.add('is-open');
   cartBackdrop.classList.add('is-open');

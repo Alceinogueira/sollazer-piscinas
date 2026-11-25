@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sollazer Piscinas | Loja Oficial</title>
   <meta name="description" content="Sollazer Piscinas - Produtos de limpeza, manutenção e equipamentos para piscinas.">
-  <link rel="stylesheet" href="css/style.css?v=20261124-2">
+  <link rel="stylesheet" href="css/style.css?v=20261124-3">
 </head>
 <body>
 
@@ -80,6 +80,7 @@
         <h2 id="productModalTitle"></h2>
         <p id="productModalDescription"></p>
         <strong id="productModalPrice"></strong>
+        <button class="product-modal__add" id="productModalAdd" type="button">Adicionar ao carrinho</button>
       </div>
     </div>
   </div>
@@ -163,6 +164,7 @@
           <button type="button" class="products-filter__button" data-category="Produtos Químicos">Produtos Químicos</button>
           <button type="button" class="products-filter__button" data-category="Diversos">Diversos</button>
         </div>
+        <p class="products__quick-hint" id="quickAddHint" hidden>✓ Toque nos produtos para ir adicionando ao carrinho.</p>
         <div class="products__grid" id="productsGrid">
           <!-- Os cards de produto são renderizados dinamicamente via app.js (fetch na API) -->
           <p class="products__loading" id="productsLoading">Carregando produtos...</p>
@@ -186,6 +188,19 @@
 
   </div>
 
+  <!-- ===================== AVISO "ADICIONADO AO CARRINHO" =====================
+       Substitui abrir o carrinho a cada produto: no 1º pergunta se quer
+       continuar escolhendo ou finalizar; nos seguintes só confirma (com
+       opção de desfazer um toque sem querer). -->
+  <div class="cart-toast" id="cartToast" role="status" aria-live="polite" hidden>
+    <p class="cart-toast__text" id="cartToastText"></p>
+    <div class="cart-toast__actions">
+      <button type="button" class="cart-toast__btn cart-toast__btn--ghost" id="cartToastUndo">Desfazer</button>
+      <button type="button" class="cart-toast__btn cart-toast__btn--ghost" id="cartToastContinue">Continuar escolhendo</button>
+      <button type="button" class="cart-toast__btn" id="cartToastFinish">Finalizar pedido</button>
+    </div>
+  </div>
+
   <!-- ===================== BARRA FIXA DE AÇÕES (somente mobile) ===================== -->
   <div class="mobile-action-bar" id="mobileActionBar">
     <button class="mobile-action-bar__btn" id="mobileQuoteBtn">[SOLICITAR ORÇAMENTO]</button>
@@ -200,6 +215,6 @@
 
   <script src="js/config.js?v=20260903-1"></script>
   <script src="js/vitrine.js?v=20261124-1"></script>
-  <script src="js/app.js?v=20261124-2"></script>
+  <script src="js/app.js?v=20261124-3"></script>
 </body>
 </html>
