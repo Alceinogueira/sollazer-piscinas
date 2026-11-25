@@ -611,6 +611,21 @@ function closeCart() {
   document.body.classList.remove('cart-is-open');
 }
 
+// Passar o dedo para a direita fecha o carrinho (nem todo mundo
+// enxerga o × lá em cima). Só conta se o gesto for mais horizontal
+// que vertical, pra não fechar quando o cliente rola a lista.
+let toqueInicio = null;
+cartSidebar.addEventListener('touchstart', event => {
+  toqueInicio = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+}, { passive: true });
+cartSidebar.addEventListener('touchend', event => {
+  if (!toqueInicio) return;
+  const dx = event.changedTouches[0].clientX - toqueInicio.x;
+  const dy = event.changedTouches[0].clientY - toqueInicio.y;
+  toqueInicio = null;
+  if (dx > 50 && dx > Math.abs(dy) * 1.5) closeCart();
+}, { passive: true });
+
 cartToggle.addEventListener('click', openCart);
 cartCloseBtn.addEventListener('click', closeCart);
 cartBackdrop.addEventListener('click', closeCart);
