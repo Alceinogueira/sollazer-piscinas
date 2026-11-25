@@ -356,8 +356,10 @@ body.city-gate-is-open { overflow: hidden; }
 /* ---------- Grid de produtos ---------- */
 .products__grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
+  /* 3 por linha já no celular — fica mais fácil comparar e escolher.
+     minmax(0, 1fr) impede que um nome comprido estoure a coluna. */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
 }
 .products__loading { color: #888; font-style: italic; }
 
@@ -370,10 +372,11 @@ body.city-gate-is-open { overflow: hidden; }
   flex-direction: column;
 }
 .product-card[hidden] { display: none !important; }
-.product-card__img { width: 100%; height: 132px; aspect-ratio: 4 / 3; object-fit: contain; padding: 8px; background: #f1f5f6; }
-.product-card__body { padding: 14px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
-.product-card__title { font-size: 1rem; font-weight: 700; color: var(--brand-navy); }
-.product-card__desc { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font-size: 0.83rem; color: #777; flex: 1; }
+.product-card__img { width: 100%; height: 88px; aspect-ratio: 4 / 3; object-fit: contain; padding: 4px; background: #f1f5f6; }
+.product-card__body { padding: 6px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.product-card__title { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; overflow-wrap: anywhere; font-size: 0.72rem; line-height: 1.25; font-weight: 700; color: var(--brand-navy); flex: 1; }
+/* No celular a descrição some do card (continua no detalhe ao tocar). */
+.product-card__desc { display: none; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font-size: 0.83rem; color: #777; flex: 1; }
 .product-card { cursor: pointer; }
 .product-card button, .product-card input { cursor: pointer; }
 .product-modal { position: fixed; inset: 0; z-index: 250; display: grid; place-items: center; padding: 20px; background: rgba(10, 31, 42, .62); }
@@ -393,7 +396,7 @@ body.city-gate-is-open { overflow: hidden; }
 .product-modal__body h2 { margin: 5px 0 10px; color: var(--brand-navy); }
 .product-modal__body p { color: #5b6870; }
 .product-modal__body strong { display: block; margin-top: 16px; color: var(--brand-blue); font-size: 1.2rem; }
-.product-card__price { font-size: 1.1rem; font-weight: 700; color: var(--brand-blue); margin-top: 4px; }
+.product-card__price { font-size: 0.85rem; font-weight: 700; color: var(--brand-blue); margin-top: 2px; }
 
 /* Seletor de quantidade [ - 1 + ] */
 .qty-selector {
@@ -419,8 +422,13 @@ body.city-gate-is-open { overflow: hidden; }
   font-size: 0.95rem;
 }
 
-.product-card__actions { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
-.product-card__btn { width: 100%; padding: 10px; border: none; border-radius: 4px; font-weight: 700; cursor: pointer; color: #fff; font-size: 0.85rem; }
+/* Dentro do card, no celular, o seletor ocupa a largura toda da coluna. */
+.product-card .qty-selector { width: 100%; }
+.product-card .qty-selector button { width: 26px; flex-shrink: 0; }
+.product-card .qty-selector input { flex: 1; min-width: 0; width: auto; font-size: 0.85rem; }
+
+.product-card__actions { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.product-card__btn { width: 100%; padding: 7px 4px; border: none; border-radius: 4px; font-weight: 700; cursor: pointer; color: #fff; font-size: 0.66rem; line-height: 1.2; }
 /* Laranja = produto vendido direto (adiciona ao carrinho) */
 .product-card__btn--cart  { background: var(--brand-blue); }
 /* Azul/teal = produto que depende de orçamento */
@@ -452,9 +460,18 @@ body.city-gate-is-open { overflow: hidden; }
    TABLET (>= 768px)
    ========================================================= */
 @media (min-width: 768px) {
-  .products__grid { grid-template-columns: repeat(2, 1fr); }
+  .products__grid { gap: 16px; }
   .hero__content h1 { font-size: 2rem; }
-  .product-card__img { height: 142px; }
+  .product-card__img { height: 142px; padding: 8px; }
+  .product-card__body { padding: 14px; gap: 6px; }
+  .product-card__title { font-size: 1rem; line-height: 1.3; -webkit-line-clamp: 2; flex: 0 0 auto; }
+  .product-card__desc { display: -webkit-box; }
+  .product-card__price { font-size: 1.1rem; margin-top: 4px; }
+  .product-card .qty-selector { width: fit-content; }
+  .product-card .qty-selector button { width: 28px; }
+  .product-card .qty-selector input { flex: 0 0 auto; width: 34px; font-size: 0.95rem; }
+  .product-card__actions { margin-top: 6px; }
+  .product-card__btn { padding: 10px; font-size: 0.85rem; }
 }
 
 /* =========================================================
