@@ -639,10 +639,68 @@ function filterProducts(category) {
 document.querySelectorAll('[data-category]').forEach(control => {
   control.addEventListener('click', event => {
     event.preventDefault();
+    limparBusca();
     filterProducts(control.dataset.category);
     document.getElementById('produtos').scrollIntoView({ behavior: 'smooth' });
     mainNav.classList.remove('is-open');
   });
+});
+
+// ---------------------------------------------------------
+// BUSCA
+// O motor (tolerante a acento, erro de digitação e sinônimos) fica
+// em js/busca.js; aqui só mostra/esconde e reordena os cards.
+// ---------------------------------------------------------
+const productSearch = document.getElementById('productSearch');
+const productSearchClear = document.getElementById('productSearchClear');
+const productSearchStatus = document.getElementById('productSearchStatus');
+let buscaTimer;
+
+function aplicarBusca() {
+  const consulta = productSearch.value.trim();
+  const grid = document.getElementById('productsGrid');
+  const cards = new Map([...grid.querySelectorAll('.product-card')].map(card => [card.dataset.id, card]));
+  productSearchClear.hidden = !consulta;
+
+  if (!consulta) {
+    // Volta pra ordem da vitrine e pro filtro de categoria que estava ativo.
+    loadedProducts.forEach(produto => { const card = cards.get(String(produto.id)); if (card) grid.appendChild(card); });
+    productSearchStatus.hidden = true;
+    filterProducts(document.querySelector('.products-filter__button.is-active')?.dataset.category || 'Todos');
+    return;
+  }
+
+  // A busca vale pra loja inteira, não só pra categoria selecionada.
+  document.querySelectorAll('.products-filter__button').forEach(button => button.classList.toggle('is-active', button.dataset.category === 'Todos'));
+  const { resultados, aproximado } = buscarProdutos(loadedProducts, consulta);
+  const encontrados = new Set(resultados.map(produto => String(produto.id)));
+  resultados.forEach(produto => { const card = cards.get(String(produto.id)); if (card) grid.appendChild(card); });
+  cards.forEach((card, id) => { card.hidden = !encontrados.has(id); });
+
+  productSearchStatus.hidden = false;
+  productSearchStatus.classList.toggle('is-empty', !resultados.length);
+  if (!resultados.length) productSearchStatus.textContent = `Não encontramos "${consulta}". Chame a gente no WhatsApp que ajudamos a achar.`;
+  else if (aproximado) productSearchStatus.textContent = `Não achamos exatamente "${consulta}". Veja produtos parecidos:`;
+  else productSearchStatus.textContent = `${resultados.length} ${resultados.length === 1 ? 'produto encontrado' : 'produtos encontrados'}`;
+}
+
+function limparBusca() {
+  if (!productSearch.value) return;
+  productSearch.value = '';
+  aplicarBusca();
+}
+
+productSearch.addEventListener('input', () => {
+  clearTimeout(buscaTimer);
+  buscaTimer = setTimeout(aplicarBusca, 150);
+});
+productSearchClear.addEventListener('click', () => { limparBusca(); productSearch.focus(); });
+// Enter/"buscar" no teclado do celular: fecha o teclado pra mostrar os resultados.
+document.getElementById('productSearchForm').addEventListener('submit', event => {
+  event.preventDefault();
+  clearTimeout(buscaTimer);
+  aplicarBusca();
+  productSearch.blur();
 });
 
 // ---------------------------------------------------------
@@ -674,6 +732,7 @@ function initCityGate() {
     // Reaplica o filtro de categoria ativo (se houver) nos cards da cidade nova.
     const categoriaAtiva = document.querySelector('.products-filter__button.is-active')?.dataset.category;
     if (categoriaAtiva) filterProducts(categoriaAtiva);
+    if (productSearch.value.trim()) aplicarBusca();
     renderCart();
   }
 

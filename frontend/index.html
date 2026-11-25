@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sollazer Piscinas | Loja Oficial</title>
   <meta name="description" content="Sollazer Piscinas - Produtos de limpeza, manutenção e equipamentos para piscinas.">
-  <link rel="stylesheet" href="css/style.css?v=20261124-3">
+  <link rel="stylesheet" href="css/style.css?v=20261124-4">
 </head>
 <body>
 
@@ -157,6 +157,13 @@
       <!-- Grid de Produtos -->
       <section class="products" id="produtos">
         <h2 class="section-title">Nossos Produtos</h2>
+        <!-- Busca tolerante a acento/erro de digitação (js/busca.js) -->
+        <form class="products-search" id="productSearchForm" role="search">
+          <span class="products-search__icon" aria-hidden="true">🔍</span>
+          <input type="search" id="productSearch" placeholder="Buscar produto (ex.: cloro, clarificante, água verde)" autocomplete="off" enterkeyhint="search" aria-label="Buscar produto">
+          <button type="button" class="products-search__clear" id="productSearchClear" aria-label="Limpar busca" hidden>×</button>
+        </form>
+        <p class="products__search-status" id="productSearchStatus" role="status" hidden></p>
         <div class="products-filter" id="productsFilter" role="toolbar" aria-label="Categorias de produtos">
           <button type="button" class="products-filter__button is-active" data-category="Todos">Todos</button>
           <button type="button" class="products-filter__button" data-category="Cloros">Cloros</button>
@@ -215,6 +222,7 @@
 
   <script src="js/config.js?v=20260903-1"></script>
   <script src="js/vitrine.js?v=20261124-1"></script>
-  <script src="js/app.js?v=20261124-3"></script>
+  <script src="js/busca.js?v=20261124-1"></script>
+  <script src="js/app.js?v=20261124-4"></script>
 </body>
 </html>

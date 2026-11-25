@@ -368,6 +368,18 @@ body.city-gate-is-open { overflow: hidden; }
 /* ---------- Seções gerais ---------- */
 .section-title { font-size: 1.4rem; margin-bottom: 16px; color: var(--brand-navy); text-align: center; }
 .products, .about, .contact { padding: 12px 0 24px; }
+/* Busca: discreta, acima das categorias */
+.products-search { position: relative; max-width: 520px; margin: 0 auto 14px; }
+.products-search__icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 0.85rem; opacity: .55; pointer-events: none; }
+.products-search input { width: 100%; padding: 10px 36px 10px 34px; border: 1px solid var(--color-border); border-radius: 999px; background: #fff; font: inherit; font-size: 16px; color: var(--brand-navy); -webkit-appearance: none; appearance: none; }
+.products-search input::placeholder { color: #9aa6ad; font-size: 0.85rem; }
+.products-search input:focus { outline: none; border-color: var(--brand-blue); box-shadow: 0 0 0 3px rgba(30,136,196,.15); }
+.products-search input::-webkit-search-cancel-button { display: none; }
+.products-search__clear { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border: 0; border-radius: 50%; background: #eef2f4; color: var(--brand-navy); font-size: 1.1rem; line-height: 1; cursor: pointer; }
+.products-search__clear[hidden] { display: none; }
+.products__search-status { margin: -4px 0 12px; text-align: center; font-size: 0.8rem; color: #6b7b83; }
+.products__search-status[hidden] { display: none; }
+.products__search-status.is-empty { color: #b42318; font-weight: 700; }
 .products-filter { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 0 0 20px; }
 .products-filter__button { border: 1px solid var(--color-border); border-radius: 4px; padding: 8px 12px; background: #fff; color: var(--brand-navy); cursor: pointer; font-weight: 700; }
 .products-filter__button.is-active, .products-filter__button:hover { background: var(--brand-blue); border-color: var(--brand-blue); color: #fff; }
