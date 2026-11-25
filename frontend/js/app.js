@@ -98,6 +98,60 @@ function clearCart() {
 }
 
 // ---------------------------------------------------------
+// FORMA DE PAGAMENTO
+// À vista (Pix, dinheiro, débito) ganha 5% de desconto; crédito
+// divide em até 3x sem juros. A escolha vai pronta no orçamento.
+// ---------------------------------------------------------
+const FORMAS_PAGAMENTO = {
+  pix: { nome: 'Pix', aVista: true },
+  dinheiro: { nome: 'Dinheiro', aVista: true },
+  debito: { nome: 'Cartão de débito', aVista: true },
+  credito: { nome: 'Cartão de crédito', aVista: false }
+};
+const DESCONTO_A_VISTA = 0.05;
+const MAX_PARCELAS = 3;
+
+function arredondar(valor) {
+  return Math.round(valor * 100) / 100;
+}
+
+function getFormaPagamento() {
+  return document.querySelector('input[name="pagamento"]:checked')?.value || null;
+}
+
+function calcularTotais(subtotal) {
+  const forma = getFormaPagamento();
+  const desconto = forma && FORMAS_PAGAMENTO[forma].aVista ? arredondar(subtotal * DESCONTO_A_VISTA) : 0;
+  const total = arredondar(subtotal - desconto);
+  const parcelas = forma === 'credito' ? Number(document.getElementById('cartInstallments').value) || 1 : 1;
+  return { forma, subtotal, desconto, total, parcelas, valorParcela: arredondar(total / parcelas) };
+}
+
+function renderPagamento(totais) {
+  document.getElementById('cartPayment').hidden = false;
+  document.getElementById('cartPayment').classList.toggle('is-missing', false);
+  document.getElementById('cartDiscountRow').hidden = !totais.desconto;
+  document.getElementById('cartDiscount').textContent = `- ${formatBRL(totais.desconto)}`;
+
+  // Opções de parcela sempre recalculadas pro total atual do carrinho.
+  const select = document.getElementById('cartInstallments');
+  select.innerHTML = Array.from({ length: MAX_PARCELAS }, (_, i) => i + 1)
+    .map(n => `<option value="${n}"${n === totais.parcelas ? ' selected' : ''}>${n}x de ${formatBRL(arredondar(totais.total / n))} sem juros</option>`).join('');
+  document.getElementById('cartInstallmentsField').hidden = totais.forma !== 'credito';
+}
+
+// Texto da forma de pagamento — usado na mensagem do WhatsApp e
+// gravado nas observações do orçamento no banco.
+function descreverPagamento(totais) {
+  const forma = FORMAS_PAGAMENTO[totais.forma];
+  if (totais.desconto) return `${forma.nome} — 5% de desconto à vista (- ${formatBRL(totais.desconto)})`;
+  return `${forma.nome} em ${totais.parcelas}x de ${formatBRL(totais.valorParcela)} sem juros`;
+}
+
+document.querySelectorAll('input[name="pagamento"]').forEach(input => input.addEventListener('change', renderCart));
+document.getElementById('cartInstallments').addEventListener('change', renderCart);
+
+// ---------------------------------------------------------
 // RENDERIZAÇÃO DO CARRINHO
 // ---------------------------------------------------------
 function formatBRL(value) {
@@ -124,6 +178,8 @@ function renderCart() {
     subtotalEl.textContent = formatBRL(0);
     totalEl.textContent = formatBRL(0);
     countEl.textContent = '0';
+    document.getElementById('cartPayment').hidden = true;
+    document.getElementById('cartDiscountRow').hidden = true;
     return;
   }
 
@@ -153,12 +209,11 @@ function renderCart() {
     cartItemsEl.appendChild(li);
   });
 
-  // Aqui poderia entrar lógica de frete, descontos, etc.
-  const total = subtotal;
-
+  const totais = calcularTotais(subtotal);
   subtotalEl.textContent = formatBRL(subtotal);
-  totalEl.textContent = formatBRL(total);
+  totalEl.textContent = formatBRL(totais.total);
   countEl.textContent = String(totalItems);
+  renderPagamento(totais);
 
   // Liga os eventos de remover e editar quantidade em cada item criado dinamicamente
   cartItemsEl.querySelectorAll('.cart-item__remove').forEach(btn => {
@@ -202,6 +257,7 @@ async function loadProducts() {
     const produtos = await response.json();
 
     loadedProducts = ordenarVitrine(produtos); // ordem dos mais vendidos: js/vitrine.js
+    removerDoCarrinhoIndisponiveis(produtos);
     grid.innerHTML = '';
     loadedProducts.forEach(produto => grid.appendChild(buildProductCard(produto)));
 
@@ -212,6 +268,15 @@ async function loadProducts() {
     grid.innerHTML = '';
     loadedProducts.forEach(produto => grid.appendChild(buildProductCard(produto)));
   }
+}
+
+// Produto que a loja ocultou (ex.: acabou no estoque) sai do carrinho
+// de quem já tinha adicionado — senão o orçamento seria recusado.
+function removerDoCarrinhoIndisponiveis(produtos) {
+  const disponiveis = new Set(produtos.map(produto => String(produto.id)));
+  const cart = getCart();
+  const filtrado = cart.filter(item => disponiveis.has(String(item.id)));
+  if (filtrado.length !== cart.length) saveCart(filtrado);
 }
 
 function buildProductCard(produto) {
@@ -345,7 +410,7 @@ function atualizarTelefoneContato(cidade) {
   if (el) el.textContent = formatarTelefone(numero);
 }
 
-function buildQuoteMessage(cart) {
+function buildQuoteMessage(cart, totais) {
   const items = cart.map((item, index) => {
     const subtotal = Number(item.preco || 0) * item.quantity;
     return [
@@ -354,15 +419,15 @@ function buildQuoteMessage(cart) {
       `Subtotal: ${formatBRL(subtotal)}`
     ].join('\n');
   }).join('\n\n');
-  const total = cart.reduce((sum, item) => sum + Number(item.preco || 0) * item.quantity, 0);
-
   return [
     `Olá! Gostaria de solicitar um orçamento na Sollazer Piscinas (unidade ${CIDADES[getCidade()] || ''}).`,
     '',
     'Itens selecionados:',
     items,
     '',
-    `Total estimado: ${formatBRL(total)}`,
+    `Soma dos itens: ${formatBRL(totais.subtotal)}`,
+    `Forma de pagamento: ${descreverPagamento(totais)}`,
+    `Total estimado: ${formatBRL(totais.total)}`,
     '',
     'Aguardo o retorno. Obrigado!'
   ].join('\n');
@@ -372,9 +437,21 @@ async function handleQuoteRequest() {
   const cart = getCart();
   if (cart.length === 0) return alert('Adicione itens para solicitar um orçamento.');
 
+  const subtotal = cart.reduce((sum, item) => sum + Number(item.preco || 0) * item.quantity, 0);
+  const totais = calcularTotais(subtotal);
+  if (!totais.forma) {
+    // Abre o carrinho (o botão da barra do celular fica fora dele) e
+    // destaca a escolha de pagamento em vez de um alert.
+    openCart();
+    const pagamento = document.getElementById('cartPayment');
+    pagamento.classList.add('is-missing');
+    pagamento.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+
   const cidade = getCidade();
   const numeroWhatsapp = WHATSAPP_POR_CIDADE[cidade] || WHATSAPP_POR_CIDADE.trancoso;
-  const whatsappUrl = `https://wa.me/${numeroWhatsapp}?text=${encodeURIComponent(buildQuoteMessage(cart))}`;
+  const whatsappUrl = `https://wa.me/${numeroWhatsapp}?text=${encodeURIComponent(buildQuoteMessage(cart, totais))}`;
   window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
 
   try {
@@ -382,7 +459,7 @@ async function handleQuoteRequest() {
     const response = await fetch(`${API_BASE_URL}/orcamentos`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ itens: cart, cidade })
+      body: JSON.stringify({ itens: cart, cidade, observacoes: `Forma de pagamento: ${descreverPagamento(totais)}. Total estimado: ${formatBRL(totais.total)}.` })
     });
     if (!response.ok) throw new Error('Erro ao enviar orçamento');
 

@@ -136,9 +136,11 @@ router.put(
       // cidade (vira 404 abaixo, sem revelar que o produto existe).
       const params = [nome, descricao || null, marca || null, categoria || null, cidadeFinal,
         preco, estoque || 0, imagem_url || imagens?.[0] || null, imagens?.length ? JSON.stringify(imagens) : null, tipo_acao, ativo ?? true, id];
+      // COALESCE: editar sem enviar fotos novas (imagens = null) mantém
+      // a galeria que já existe, em vez de apagar as fotos extras.
       let sql = `UPDATE produtos
          SET nome = ?, descricao = ?, marca = ?, categoria = ?, cidade = ?, preco = ?,
-             estoque = ?, imagem_url = ?, imagens = ?, tipo_acao = ?, ativo = ?
+             estoque = ?, imagem_url = ?, imagens = COALESCE(?, imagens), tipo_acao = ?, ativo = ?
          WHERE id = ?`;
       if (req.admin.cidade) {
         sql += ' AND cidade = ?';
@@ -154,6 +156,44 @@ router.put(
     } catch (err) {
       console.error(err);
       res.status(500).json({ erro: 'Erro ao atualizar produto.' });
+    }
+  }
+);
+
+// ---------------------------------------------------------
+// PATCH /api/admin/produtos/:id/visibilidade -> só mostra/oculta
+// Botão rápido do painel pra tirar da loja um produto que acabou
+// no estoque (e voltar depois), sem reenviar o cadastro inteiro.
+// Liberado também pro funcionário, respeitando a cidade do login.
+// ---------------------------------------------------------
+router.patch(
+  '/:id/visibilidade',
+  [body('ativo').isBoolean().withMessage('Informe se o produto fica visível.')],
+  async (req, res) => {
+    const { id } = req.params;
+    if (!/^\d+$/.test(id)) return res.status(400).json({ erro: 'ID inválido.' });
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ erros: errors.array() });
+    }
+
+    try {
+      const params = [req.body.ativo === true || req.body.ativo === 'true', id];
+      let sql = 'UPDATE produtos SET ativo = ? WHERE id = ?';
+      if (req.admin.cidade) {
+        sql += ' AND cidade = ?';
+        params.push(req.admin.cidade);
+      }
+
+      const [result] = await db.execute(sql, params);
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ erro: 'Produto não encontrado.' });
+      }
+      res.json({ mensagem: 'Visibilidade atualizada.' });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ erro: 'Erro ao atualizar visibilidade.' });
     }
   }
 );

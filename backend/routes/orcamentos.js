@@ -20,7 +20,10 @@ router.post(
     body('cidade').isIn(CIDADES_VALIDAS).withMessage('Cidade inválida.'),
     body('itens').isArray({ min: 1 }).withMessage('O orçamento precisa ter ao menos um item.'),
     body('itens.*.id').notEmpty().withMessage('Item sem ID de produto.'),
-    body('itens.*.quantity').isInt({ min: 1 }).withMessage('Quantidade inválida.')
+    body('itens.*.quantity').isInt({ min: 1 }).withMessage('Quantidade inválida.'),
+    // Forma de pagamento escolhida no carrinho vai aqui, já em texto
+    // (ex.: "Pix — 5% de desconto à vista: R$ 95,00").
+    body('observacoes').optional().trim().isLength({ max: 500 })
   ],
   async (req, res) => {
     const errors = validationResult(req);

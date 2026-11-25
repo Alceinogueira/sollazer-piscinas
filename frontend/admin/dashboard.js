@@ -99,13 +99,29 @@ function renderProductList() {
     const heading = productGroup !== currentGroup ? `<h3 class="admin-list__group">${productGroup} <span>${counts[productGroup]}</span></h3>` : '';
     currentGroup = productGroup;
     return `${heading}
-    <div class="admin-list__item"><img src="${product.imagem_url || '../assets/IMG-20260820-WA0128-removebg-preview.png'}" alt="">
-      <div class="admin-list__info"><strong>${product.nome}</strong><small>${CIDADES[product.cidade] || 'sem cidade'} · ${Number(product.preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} · ${product.ativo ? 'visível' : 'oculto'}</small></div>
+    <div class="admin-list__item${product.ativo ? '' : ' is-hidden'}"><img src="${product.imagem_url || '../assets/IMG-20260820-WA0128-removebg-preview.png'}" alt="">
+      <div class="admin-list__info"><strong>${product.nome}</strong><small>${CIDADES[product.cidade] || 'sem cidade'} · ${Number(product.preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} · ${product.ativo ? 'visível' : 'oculto na loja'}</small></div>
+      <button type="button" data-toggle-product="${product.id}" title="${product.ativo ? 'Tirar da loja (ex.: acabou no estoque)' : 'Voltar a mostrar na loja'}">${product.ativo ? 'Ocultar' : 'Mostrar'}</button>
       <button type="button" data-edit-product="${product.id}">Editar</button>${isAdmin ? `<button type="button" data-delete-product="${product.id}">Excluir</button>` : ''}
     </div>`;
   }).join('') || '<p class="admin-hint">Nenhum produto encontrado.</p>';
   document.querySelectorAll('[data-edit-product]').forEach(button => button.onclick = () => editProduct(allProducts.find(item => String(item.id) === button.dataset.editProduct)));
   document.querySelectorAll('[data-delete-product]').forEach(button => button.onclick = () => deleteProduct(button.dataset.deleteProduct));
+  document.querySelectorAll('[data-toggle-product]').forEach(button => button.onclick = () => toggleProductVisibility(allProducts.find(item => String(item.id) === button.dataset.toggleProduct), button));
+}
+// Mostrar/ocultar com um clique — pra produto que acabou no estoque
+// sumir da loja na hora, sem o cliente escolher algo que não tem.
+async function toggleProductVisibility(product, button) {
+  button.disabled = true;
+  try {
+    const ativo = !product.ativo;
+    await api(`/admin/produtos/${product.id}/visibilidade`, { method: 'PATCH', body: JSON.stringify({ ativo }) });
+    product.ativo = ativo ? 1 : 0;
+    renderProductList();
+  } catch (error) {
+    button.disabled = false;
+    alert(error.message);
+  }
 }
 productGroupFilter.addEventListener('change', renderProductList);
 productSearch.addEventListener('input', renderProductList);

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sollazer Piscinas | Loja Oficial</title>
   <meta name="description" content="Sollazer Piscinas - Produtos de limpeza, manutenção e equipamentos para piscinas.">
-  <link rel="stylesheet" href="css/style.css?v=20261124-1">
+  <link rel="stylesheet" href="css/style.css?v=20261124-2">
 </head>
 <body>
 
@@ -112,10 +112,30 @@
           <li class="cart-items__empty" id="cartEmptyMsg">Seu carrinho está vazio.</li>
         </ul>
 
+        <!-- Forma de pagamento: à vista (Pix/dinheiro/débito) tem 5% de
+             desconto; crédito em até 3x sem juros. Vai junto no orçamento. -->
+        <fieldset class="cart-payment" id="cartPayment" hidden>
+          <legend class="cart-payment__title">Como prefere pagar?</legend>
+          <div class="cart-payment__options">
+            <label><input type="radio" name="pagamento" value="pix"><span>Pix</span></label>
+            <label><input type="radio" name="pagamento" value="dinheiro"><span>Dinheiro</span></label>
+            <label><input type="radio" name="pagamento" value="debito"><span>Débito</span></label>
+            <label><input type="radio" name="pagamento" value="credito"><span>Crédito</span></label>
+          </div>
+          <label class="cart-payment__installments" id="cartInstallmentsField" hidden>
+            Parcelas <select id="cartInstallments"></select>
+          </label>
+          <p class="cart-payment__hint" id="cartPaymentHint">Pix, dinheiro ou débito: 5% de desconto à vista. Crédito: até 3x sem juros.</p>
+        </fieldset>
+
         <div class="cart-summary">
           <div class="cart-summary__row">
             <span>Subtotal:</span>
             <span id="cartSubtotal">R$ 0,00</span>
+          </div>
+          <div class="cart-summary__row cart-summary__row--discount" id="cartDiscountRow" hidden>
+            <span>Desconto à vista (5%):</span>
+            <span id="cartDiscount">- R$ 0,00</span>
           </div>
           <div class="cart-summary__row cart-summary__row--total">
             <span>Total:</span>
@@ -180,6 +200,6 @@
 
   <script src="js/config.js?v=20260903-1"></script>
   <script src="js/vitrine.js?v=20261124-1"></script>
-  <script src="js/app.js?v=20261124-1"></script>
+  <script src="js/app.js?v=20261124-2"></script>
 </body>
 </html>

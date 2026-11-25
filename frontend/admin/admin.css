@@ -35,9 +35,14 @@
 .admin-list__item { display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid var(--admin-border); border-radius: 6px; }
 .admin-list__item img { width: 54px; height: 42px; object-fit: cover; border-radius: 4px; background: var(--admin-light); }
 .admin-list__info { flex: 1; min-width: 0; }
-.admin-list__info strong, .admin-list__info small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-list__info strong { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; line-height: 1.25; }
+.admin-list__info small { display: block; }
 .admin-list__info small { color: #56727d; }
 .admin-list__item button { border: 0; background: transparent; color: var(--admin-blue); cursor: pointer; font-weight: 700; }
+.admin-list__item button:disabled { opacity: .5; cursor: wait; }
+.admin-list__item.is-hidden { background: #f4f6f7; border-style: dashed; }
+.admin-list__item.is-hidden img, .admin-list__item.is-hidden strong { opacity: .5; }
+.admin-list__item.is-hidden small { color: #b42318; }
 .auth-pending body { visibility: hidden; }
 .admin-list-tools { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--admin-border); }
 .admin-list-tools label { display: grid; gap: 6px; font-weight: 700; font-size: .85rem; }

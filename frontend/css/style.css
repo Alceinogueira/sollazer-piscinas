@@ -340,6 +340,25 @@ body.city-gate-is-open { overflow: hidden; }
 .cart-summary__row { display: flex; justify-content: space-between; font-size: 0.9rem; padding: 4px 0; }
 .cart-summary__row--total { font-weight: 700; font-size: 1.05rem; border-top: 1px solid var(--color-border); margin-top: 6px; padding-top: 8px; color: var(--brand-navy); }
 
+/* Forma de pagamento — discreta, logo acima do resumo */
+.cart-payment { border: 0; border-top: 1px solid var(--color-border); padding: 10px 16px 4px; }
+.cart-payment[hidden] { display: none; }
+.cart-payment__title { float: left; width: 100%; font-size: 0.85rem; font-weight: 700; color: var(--brand-navy); margin-bottom: 6px; }
+.cart-payment__options { clear: both; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.cart-payment__options label { position: relative; cursor: pointer; }
+.cart-payment__options input { position: absolute; opacity: 0; pointer-events: none; }
+.cart-payment__options span { display: block; padding: 7px 2px; border: 1px solid var(--color-border); border-radius: 4px; text-align: center; font-size: 0.75rem; font-weight: 700; color: var(--brand-navy); background: #fff; }
+.cart-payment__options input:checked + span { background: var(--brand-blue); border-color: var(--brand-blue); color: #fff; }
+.cart-payment__options input:focus-visible + span { outline: 2px solid var(--brand-blue); outline-offset: 2px; }
+.cart-payment__installments { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 0.8rem; font-weight: 700; color: var(--brand-navy); }
+.cart-payment__installments[hidden] { display: none; }
+.cart-payment__installments select { flex: 1; min-width: 0; padding: 6px; border: 1px solid var(--color-border); border-radius: 4px; font: inherit; font-weight: 400; }
+.cart-payment__hint { margin-top: 6px; font-size: 0.72rem; color: #6b7b83; }
+.cart-payment.is-missing .cart-payment__title, .cart-payment.is-missing .cart-payment__hint { color: #b42318; }
+.cart-payment.is-missing .cart-payment__options span { border-color: #b42318; }
+.cart-summary__row--discount { color: #1a7f37; }
+.cart-summary__row[hidden] { display: none; }
+
 .cart-actions { padding: 12px 16px 16px; }
 .cart-actions .btn { font-size: 0.8rem; }
 
